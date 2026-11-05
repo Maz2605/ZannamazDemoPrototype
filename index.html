@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b22">
+  <meta name="description" content="Prototype Arcade — thư viện game thử nghiệm. Khám phá luật chơi và chơi demo ngay trên trình duyệt.">
+  <title>Prototype Arcade · Một nơi để thử những ý tưởng mới</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/library.css">
+  <link rel="stylesheet" href="./assets/devices.css">
+  <link rel="stylesheet" href="./assets/share.css">
+  <script type="module" src="./assets/library.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#library">Đến thư viện game</a>
+  <header class="site-header wrap">
+    <a class="brand" href="./index.html" aria-label="Prototype Arcade — Trang chủ"><span class="brand-mark" aria-hidden="true">p<span>↗</span></span><span>prototype<span class="brand-light"> / arcade</span></span></a>
+    <a class="nav-link" href="#library"><span class="status-dot"></span> Thư viện game <span aria-hidden="true">↗</span></a>
+  </header>
+  <main class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="line"></span> SMALL GAMES. NEW POSSIBILITIES.</p>
+        <h1 id="hero-title">Ý tưởng nhỏ.<br>Trải nghiệm <em>mới.</em></h1>
+        <p class="hero-description">Một góc dành cho những trò chơi đang thành hình.<br class="desktop-break"> Chọn một ý tưởng, tìm hiểu luật và tự mình khám phá.</p>
+        <a class="button primary hero-button" href="#library">Khám phá game <span aria-hidden="true">↓</span></a>
+        <div class="hero-facts"><span><strong id="total-games">—</strong> game thử nghiệm</span><span><i class="status-dot"></i> Chơi ngay trên trình duyệt</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <span class="art-label">THE NEXT IDEA IS A PLAY AWAY</span>
+        <div class="art-tile tile-back"><span>✧</span></div>
+        <div class="art-tile tile-main"><span class="tile-flower">✳</span><span class="tile-coordinates">PLAY / EXPLORE / REPEAT</span></div>
+        <div class="art-tile tile-front"><span>↗</span></div>
+        <span class="art-cross cross-one">+</span><span class="art-cross cross-two">+</span>
+        <span class="art-caption">INDEPENDENT IDEAS<br>ONE PLAYGROUND.</span>
+      </div>
+    </section>
+    <section class="library" id="library" aria-labelledby="library-title">
+      <div class="section-heading"><div><p class="eyebrow">THE COLLECTION</p><h2 id="library-title">Chọn game của bạn<span class="count-badge" id="collection-count">—</span></h2></div><p>Mỗi game, một thế giới riêng.</p></div>
+      <form class="toolbar" role="search" id="search-form">
+        <label class="search-box"><span aria-hidden="true">⌕</span><span class="sr-only">Tìm game</span><input id="search" type="search" placeholder="Tìm tên game, ý tưởng, cách chơi…" autocomplete="off"></label>
+        <label class="category-box"><span>Thể loại</span><select id="category" aria-label="Lọc thể loại"><option value="">Tất cả</option></select></label>
+      </form>
+      <p id="catalog-warning" class="notice" role="status" hidden></p>
+      <p id="results-status" class="results-status" role="status" aria-live="polite">Đang mở thư viện…</p>
+      <div class="game-grid" id="game-grid"></div>
+      <div class="empty-state" id="empty-state" hidden><span aria-hidden="true">⌕</span><h3>Chưa tìm thấy game phù hợp</h3><p>Thử một từ khóa khác hoặc xem lại toàn bộ thư viện.</p><button class="button secondary" id="reset-filters" type="button">Xóa bộ lọc</button></div>
+      <div class="collection-note"><span aria-hidden="true">✳</span><p>Thư viện đang lớn dần.<br><span>Những ý tưởng mới sẽ tiếp tục xuất hiện ở đây.</span></p><span class="note-line"></span><span class="note-label">ALWAYS IN PLAY.</span></div>
+    </section>
+  </main>
+  <footer class="site-footer wrap"><span>prototype / arcade</span><p>Những bản thử nghiệm nhỏ, dành cho sự tò mò lớn.</p><a href="#hero-title">Về đầu trang ↑</a></footer>
+  <dialog id="game-dialog" aria-labelledby="dialog-title">
+    <header class="dialog-header"><div><p class="eyebrow" id="dialog-category"></p><h2 id="dialog-title"></h2></div><button class="icon-button" id="close-dialog" type="button" aria-label="Đóng demo">✕</button></header>
+    <div class="dialog-body" id="dialog-body">
+      <section class="player-pane" id="device-player" aria-label="Trình chơi demo trong khung điện thoại">
+        <div class="device-caption"><label class="device-picker"><span class="sr-only">Chọn khung điện thoại</span><select id="device-select" aria-label="Chọn khung điện thoại"></select></label><span class="device-finish" id="device-finish">NATURAL TITANIUM</span></div>
+        <p class="player-status" id="player-status" role="status"></p>
+        <div class="phone-device" id="phone-device">
+          <span class="classic-speaker" aria-hidden="true"></span><span class="classic-camera" aria-hidden="true"></span><span class="classic-home-button" aria-hidden="true"></span>
+          <span class="phone-action" aria-hidden="true"></span><span class="phone-volume" aria-hidden="true"></span><span class="phone-power" aria-hidden="true"></span>
+          <div class="phone-screen">
+            <div class="phone-status-bar" aria-hidden="true"><span class="phone-time">9:41</span><span class="dynamic-island"><i></i></span><span class="phone-indicators"><svg viewBox="0 0 42 12" fill="currentColor"><path d="M0 8h2v4H0zm4-2h2v6H4zm4-3h2v9H8zm4-3h2v12h-2z"/><path d="M18 4q6-6 12 0l-1.5 1.5q-4.5-4.5-9 0zm3 3q3-3 6 0l-1.5 1.5q-1.5-1.5-3 0zm3 2 1.5 1.5L24 12l-1.5-1.5z"/><rect x="33" y="2" width="7" height="9" rx="1"/><path d="M41 5h1v3h-1z"/></svg></span></div>
+            <div id="frame-host"></div>
+            <div class="phone-home-area" aria-hidden="true"><span></span></div>
+          </div>
+        </div>
+        <div class="player-toolbar"><span><i class="status-dot"></i> LIVE DEMO</span><div><button id="show-rules" type="button" aria-controls="game-details" aria-expanded="true">Luật chơi ↓</button><button id="restart-demo" type="button">↻ Chạy lại</button><a id="standalone-link" target="_blank" rel="noopener noreferrer">Mở riêng ↗</a></div></div>
+        <p class="session-note">Đóng hoặc chạy lại sẽ kết thúc phiên chơi hiện tại.</p>
+      </section>
+        <aside class="demo-qr-panel" id="demo-qr-panel" aria-labelledby="demo-qr-title" hidden>
+          <p class="eyebrow">SCAN & PLAY</p>
+          <h3 id="demo-qr-title">Quét để chơi</h3>
+          <img id="demo-qr-image" width="208" height="208" alt="QR mở trực tiếp game" hidden>
+          <p class="demo-qr-status" id="demo-qr-status" role="status" aria-live="polite"></p>
+          <p class="demo-qr-warning" id="demo-qr-warning" hidden></p>
+          <label class="sr-only" for="demo-share-link">Link chơi game trên điện thoại</label>
+          <input id="demo-share-link" type="url" readonly spellcheck="false">
+          <button id="demo-copy-link" class="button secondary" type="button">Sao chép link</button>
+        </aside>
+      <aside class="game-details" id="game-details"><p class="details-description" id="dialog-description"></p><h3>Luật chơi</h3><ol id="dialog-rules"></ol><div id="features-section"><h3>Nổi bật</h3><ul id="dialog-features"></ul></div><h3>Điều khiển</h3><ul id="dialog-controls"></ul><div id="notes-section"><h3>Về bản demo</h3><ul id="dialog-notes"></ul></div><button class="button primary" id="start-demo" type="button">Chơi demo <span aria-hidden="true">↗</span></button></aside>
+    </div>
+  </dialog>
+  <dialog id="share-dialog" aria-labelledby="share-title">
+    <header class="dialog-header"><div><p class="eyebrow">SCAN & PLAY</p><h2 id="share-title">Chơi trên điện thoại</h2></div><button class="icon-button" id="close-share" type="button" aria-label="Đóng mã QR">✕</button></header>
+    <div class="rules-only share-body">
+      <div class="qr-container"><img id="qr-image" width="280" height="280" alt="QR mở trực tiếp game" hidden></div>
+      <p class="qr-instructions" id="qr-status" role="status" aria-live="polite"></p>
+      <p class="notice" id="share-warning" hidden></p>
+      <label class="share-link-label" for="share-link">Link chơi trực tiếp</label>
+      <input id="share-link" type="url" readonly spellcheck="false" aria-label="Link chơi trực tiếp">
+      <div class="share-actions"><button id="copy-link" class="button primary" type="button">Sao chép link</button><a id="download-qr" class="button secondary" hidden>Tải QR</a></div>
+      <a id="share-direct" class="share-direct" target="_blank" rel="noopener noreferrer">Mở link game ↗</a>
+      <p class="share-note">Chơi ngay trên trình duyệt điện thoại. Không cần cài app.</p>
+    </div>
+  </dialog>
+  <noscript><p class="notice wrap">Hãy bật JavaScript để xem thư viện. Bạn vẫn có thể <a href="./games/spirit-grove/index.html">chơi Spirit Grove trực tiếp</a>.</p></noscript>
+</body>
+</html>

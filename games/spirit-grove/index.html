@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f8fbf4" />
+  <meta name="description" content="Spirit Grove — 10-level animal diorama rotation puzzle prototype." />
+  <title>Spirit Grove — Puzzle Prototype</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <main id="sg-app" class="app-shell" aria-label="Spirit Grove puzzle demo">
+    <header class="app-header">
+      <div class="app-headline">
+        <div class="eyebrow">LIVING DIORAMA PUZZLE · V0.1</div>
+        <h1>🌿 Spirit Grove <span>✦</span></h1>
+      </div>
+      <div class="demo-chip">10 LEVEL DEMO</div>
+    </header>
+
+    <nav class="level-nav" id="level-nav" aria-label="Chọn level"></nav>
+
+    <section class="level-info" aria-label="Thông tin level">
+      <div>
+        <h2 id="level-title">Đánh thức vòng phép</h2>
+        <div class="level-subtitle" id="level-subtitle"></div>
+      </div>
+      <div class="progress">
+        <div><strong id="progress-value">0/6</strong> đúng</div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </section>
+
+    <section class="scene" id="scene" aria-label="Bàn chơi">
+      <aside id="tutorial" class="tutorial" aria-live="polite" hidden><strong id="tutorial-title"></strong><button id="tutorial-skip" type="button">Bỏ qua</button><p id="tutorial-text"></p></aside>
+      <svg id="board" viewBox="0 0 760 660" role="group" aria-label="Hòn đảo linh thú với các mâm xoay 4 vị trí" aria-describedby="drag-instruction"></svg>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div id="win-overlay" class="win-overlay" aria-live="polite" hidden>
+        <div class="win-card">
+          <div id="win-stars" class="win-stars">★★★</div>
+          <div class="win-animals" id="win-animals"></div>
+          <h2 id="win-title">Hòn đảo hồi sinh!</h2>
+          <p id="win-message"></p>
+          <button id="next-level" class="primary-button" type="button">Level tiếp theo →</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="swipe-guide"><strong id="swipe-guide" role="status">Chạm trục ở ngã tư để chọn 4 con</strong><span>← Vuốt trái ↻ <b>·</b> Vuốt phải ↺ →</span></div>
+
+    <section class="rule-card" aria-label="Luật level">
+      <span class="rule-icon" id="rule-icon" aria-hidden="true">🌀</span>
+      <div>
+        <strong id="rule-title">Vòng phép xoay</strong>
+        <p id="rule-description"></p>
+      </div>
+    </section>
+
+    <div class="action-bar">
+      <button id="undo" class="action-button" type="button">↶ Undo</button>
+      <button id="restart" class="action-button" type="button">⟳ Restart</button>
+      <button id="hint" class="action-button" type="button">✦ Gợi ý</button>
+      <div class="moves">Lượt <strong id="move-count">0</strong><span id="par-count"></span></div>
+    </div>
+    <footer class="footer" id="drag-instruction">Chạm trục ở ngã tư → vuốt trái / phải trên bàn · Có thể giữ trục và vuốt luôn · Mỗi lượt xoay ¼ vòng.</footer>
+  </main>
+  <!-- No bundler, no npm, no external assets; works by double-clicking index.html. -->
+  <script defer src="./src/levels.js"></script>
+  <script defer src="./src/engine.js"></script>
+  <script defer src="./src/art.js"></script>
+  <script defer src="./src/gesture.js"></script>
+  <script defer src="./src/game.js"></script>
+</body>
+</html>

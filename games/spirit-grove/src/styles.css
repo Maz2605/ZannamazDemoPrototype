@@ -1,0 +1,67 @@
+:root{font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;color:#244c40;background:#ecf4ed;font-synthesis:none}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{padding:16px 12px 36px;display:flex;justify-content:center;align-items:flex-start}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.4;cursor:not-allowed}
+.app-shell{width:100%;max-width:650px;background:#fffef9;border:1px solid #dceadf;border-radius:22px;overflow:hidden;box-shadow:0 14px 45px #416b5122}
+.app-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 19px 14px}
+.eyebrow{font-size:10px;letter-spacing:1.65px;color:#83a99a;font-weight:900}
+.app-headline h1{font-size:25px;letter-spacing:-.8px;line-height:1.2;margin:4px 0 0;color:#286b55;font-weight:950}
+.app-headline h1 span{font-size:19px;color:#dbaa4e}
+.demo-chip{white-space:nowrap;background:#eaf6eb;border:1px solid #d2ead8;color:#428970;font-weight:850;font-size:10px;letter-spacing:.3px;border-radius:10px;padding:9px}
+.level-nav{display:flex;gap:6px;overflow-x:auto;padding:0 15px 14px;scrollbar-width:thin}
+.level-button{flex:1 0 36px;min-width:36px;height:39px;background:#f1f5ed;border:1px solid #dfebe0;border-radius:11px;color:#89a095;font-size:13px;font-weight:900}
+.level-button.current{background:#309570;border-color:#309570;color:white;box-shadow:0 3px 0 #227555}
+.level-button.done:not(.current){background:#d9f0df;color:#318660}
+.level-button:focus-visible,.action-button:focus-visible,.primary-button:focus-visible{outline:3px solid #dfae4c;outline-offset:2px}
+.level-info{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#ecf5eb;border-top:1px solid #e2eee1;padding:13px 17px}
+.level-info h2{font-size:16px;margin:0;font-weight:950;color:#2f6f57;line-height:1.4}
+.level-subtitle{font-size:11px;color:#799789;line-height:1.45;margin-top:2px}
+.progress{text-align:right;flex:0 0 106px;font-size:12px;color:#678e78}.progress strong{font-size:17px;color:#2f8a65}
+.progress-track{height:7px;border-radius:9px;background:#cce3d1;overflow:hidden;margin-top:5px}.progress-fill{height:100%;width:0;background:#4aaf80;border-radius:10px;transition:width .25s ease}
+.scene{position:relative;background:#e6f4ed;isolation:isolate;overflow:hidden}
+.scene svg{display:block;width:100%;height:auto;max-height:570px;touch-action:none;user-select:none;-webkit-user-select:none}
+.wheel{cursor:grab;outline:none;touch-action:none}
+.wheel-target{cursor:grab;touch-action:none}
+.wheel .wheel-hit{stroke:transparent;stroke-width:3}
+.wheel:not(.locked):hover .wheel-hit,.wheel:focus-visible .wheel-hit{stroke:#d6a94d;fill:#ffdf8e22}
+.wheel.active .wheel-hit{stroke:#d6a94d;fill:#ffdf8e33;stroke-dasharray:5 5}
+.wheel.active .wheel-body{filter:brightness(1.15)}
+.wheel.selected .wheel-hit{stroke:#d6a94d;stroke-dasharray:5 5}
+.animal-hit{cursor:grab;stroke:transparent;stroke-width:2}
+.selected-animal .animal-hit{stroke:#d6a94d;stroke-dasharray:4 5}
+.wheel.locked{opacity:.7;cursor:not-allowed}
+.wheel-track{opacity:.15;transition:opacity .15s}
+.wheel-track.active,.wheel-track.selected{opacity:.85;stroke:#d1a34c}
+.dragging,.dragging .wheel{cursor:grabbing}
+#flying-sprites{pointer-events:none}
+.swipe-guide{padding:10px 14px;text-align:center;background:#f7f1df;border-top:1px solid #e5d9b6;color:#72603b;line-height:1.5}
+.swipe-guide strong{display:block;font-size:12px}.swipe-guide span{font-size:12px;color:#43876a}.swipe-guide b{padding:0 9px;color:#b5a47b}
+.tutorial{position:absolute;z-index:5;top:7px;left:10px;right:10px;padding:8px 10px;border:1px solid #d5b75e;border-radius:12px;background:#fffbeeef;color:#665124;box-shadow:0 3px 12px #69562815;display:grid;grid-template-columns:1fr auto;gap:2px 7px}
+.tutorial[hidden]{display:none}.tutorial strong{font-size:12px;line-height:1.4}.tutorial p{grid-column:1/-1;font-size:11px;line-height:1.35;margin:0}
+.tutorial button{font:inherit;font-size:10px;border:0;background:#efe5c7;color:#74602c;padding:2px 7px;border-radius:7px}
+.tutorial-hand{display:inline-block;animation:tutorial-swipe 1.4s ease-in-out infinite}
+@keyframes tutorial-swipe{0%,100%{transform:translateX(0)}60%{transform:translateX(12px)}}
+.wheel.tutorial-focus .wheel-hit{stroke:#c79523;stroke-width:4;stroke-dasharray:5 5}
+.wheel-track.tutorial-focus{opacity:1;stroke:#d3a12d;stroke-width:3}
+.toast{position:absolute;z-index:6;left:50%;bottom:16px;transform:translate(-50%,10px);border-radius:12px;background:#2e6153ee;color:white;padding:10px 14px;font-size:12px;font-weight:750;line-height:1.4;max-width:87%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 8px 20px #1a3b3130}
+.toast.visible{opacity:1;transform:translate(-50%,0)}
+.rule-card{padding:13px 17px;display:flex;gap:11px;align-items:flex-start;border-top:1px solid #dce8dc}
+.rule-icon{width:42px;height:42px;background:#e5f3e8;border-radius:13px;display:grid;place-items:center;flex-shrink:0;font-size:24px}
+.rule-card strong{display:block;font-size:13px;font-weight:900;color:#2e7059}
+.rule-card p{font-size:12px;color:#799288;line-height:1.55;margin:4px 0 0}
+.action-bar{display:flex;align-items:center;gap:7px;padding:12px 15px 14px;flex-wrap:wrap}
+.action-button{background:#f3f8f2;border:1px solid #d5e5d8;border-radius:11px;padding:10px 13px;font-size:12px;font-weight:850;color:#477b66}
+.action-button:active:not(:disabled){transform:translateY(1px)}
+.moves{margin-left:auto;text-align:right;color:#829f90;font-size:11px;white-space:nowrap}.moves strong{color:#327f61;font-size:20px;font-variant-numeric:tabular-nums}
+.footer{text-align:center;font-size:11px;color:#91a89a;padding:0 15px 17px;line-height:1.5}
+.win-overlay{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:#183d36b9;backdrop-filter:blur(6px);padding:16px}
+.win-overlay[hidden]{display:none!important}
+.win-card{background:#fffdf5;border-radius:23px;padding:23px 20px 20px;max-width:325px;width:100%;text-align:center;box-shadow:0 15px 60px #123e315c;animation:win-pop .4s cubic-bezier(.2,1.3,.3,1)}
+.win-stars{font-size:29px;color:#e8b251;letter-spacing:4px}.win-animals{font-size:37px;letter-spacing:4px;margin:14px 0}
+.win-card h2{font-size:22px;font-weight:950;color:#278463;margin:8px 0}.win-card p{font-size:12px;line-height:1.5;color:#769084;margin:7px 0 16px}
+.primary-button{width:100%;background:#288966;border:0;border-radius:13px;color:white;font-weight:900;padding:13px;box-shadow:0 4px 0 #196a4d}.primary-button:active{transform:translateY(3px);box-shadow:none}
+@keyframes win-pop{from{opacity:0;transform:translateY(15px) scale(.91)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:420px){body{padding:0;display:block;background:#fffef9}.app-shell{border:none;border-radius:0;box-shadow:none}.app-header{padding:17px 15px 12px}.app-headline h1{font-size:22px}.demo-chip{font-size:9px;padding:8px}.level-info h2{font-size:14px}.progress{flex-basis:89px}.action-button{font-size:11px;padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}

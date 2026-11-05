@@ -1,0 +1,177 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Spirit Grove circular drag regression</title>
+<style>body{font:14px system-ui}iframe{width:390px;height:850px;border:0}pre{white-space:pre-wrap}</style>
+<pre id="results">RUNNING</pre>
+<iframe src="../games/spirit-grove/index.html" title="Game under test"></iframe>
+<script>
+document.querySelector('iframe').onload = async function () {
+  const win = this.contentWindow, doc = win.document, g = win.SpiritGrove;
+  const board = doc.getElementById('board'), results = document.getElementById('results');
+  const lines = [];
+  const assert = (ok, message) => { if (!ok) throw Error(message); };
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  // Synthetic pointer events cannot establish native capture. Verify capture lifecycle
+  // through these substitutes; real touch capture is a separate manual check.
+  let captured = null;
+  board.setPointerCapture = id => { captured = id; };
+  board.hasPointerCapture = id => captured === id;
+  board.releasePointerCapture = () => { captured = null; };
+  function emit(type, wheel, degrees, id = 1, radius = .45) {
+    const c = g.Art.hubPoint(g.LEVELS[g.Debug.getLevel()], wheel);
+    const p = new win.DOMPoint(c.x + 102 * radius, c.y).matrixTransform(board.getScreenCTM());
+    p.x += degrees/2;
+    const target = type === 'pointerdown' ? board.querySelector(`.wheel[data-wheel="${wheel}"] .wheel-hit`) : board;
+    target.dispatchEvent(new win.PointerEvent(type, { bubbles:true, cancelable:true, pointerId:id, pointerType:'touch', isPrimary:id===1, button:0, clientX:p.x, clientY:p.y }));
+  }
+  async function test(name, action) {
+    try { await action(); lines.push('PASS ' + name); }
+    catch (e) { lines.push('FAIL ' + name + ': ' + e.message); }
+    results.textContent = lines.join('\n');
+  }
+  await test('tap, small drag, cancel and capture loss preserve state', async () => {
+    g.Debug.load(1); const initial = g.Debug.getState().join('');
+    emit('pointerdown',0,0); emit('pointerup',0,0); await sleep(350);
+    assert(g.Debug.getMoves()===0,'tap counted');
+    emit('pointerdown',0,0); emit('pointermove',0,15); emit('pointerup',0,15); await sleep(350);
+    assert(g.Debug.getMoves()===0,'short drag counted');
+    emit('pointerdown',0,0); emit('pointermove',0,60); g.Debug.undo();
+    assert(!board.querySelector('[data-orbit-cell]'),'Undo without history left a preview');
+    for (const event of ['pointercancel','lostpointercapture']) {
+      emit('pointerdown',0,0); emit('pointermove',0,70); emit(event,0,70); await sleep(350);
+      assert(g.Debug.getState().join('')===initial && g.Debug.getMoves()===0,event+' changed state');
+    }
+  });
+  await test('preview follows hand; right swipe commits once; Undo restores', async () => {
+    g.Debug.load(1); const initial = g.Debug.getState();
+    emit('pointerdown',0,0); emit('pointermove',0,60);
+    assert(board.querySelectorAll('#flying-sprites [data-orbit-cell]').length===4,'missing four preview animals');
+    assert(board.querySelector('.wheel.active'),'hub not highlighted');
+    assert(g.Debug.getMoves()===0,'preview committed early');
+    emit('pointerup',0,60); await sleep(500);
+    assert(g.Debug.getMoves()===1,'expected one move');
+    assert(g.Debug.getState().join('')===g.Engine.spin(g.LEVELS[1],initial,0,-1).next.join(''),'wrong right-swipe result');
+    assert(g.Debug.undo(),'Undo refused');
+    assert(g.Debug.getState().join('')===initial.join(''),'Undo did not restore');
+  });
+  await test('secondary pointer cannot steer or release the active gesture', async () => {
+    g.Debug.load(1);
+    emit('pointerdown',0,0); emit('pointermove',0,70,2); emit('pointerup',0,70,2);
+    assert(g.Debug.getMoves()===0 && captured===1,'secondary pointer took ownership');
+    emit('pointermove',0,-60); emit('pointerup',0,-60); await sleep(500);
+    assert(g.Debug.getMoves()===1,'primary pointer could not finish');
+  });
+  await test('center tap selects a group; a short swipe across a shared animal head uses that group', async () => {
+    g.Debug.load(1); const initial = g.Debug.getState();
+    emit('pointerdown',1,0,1,0); emit('pointerup',1,0,1,0);
+    assert(g.Debug.getMoves()===0,'selection tap counted');
+    assert(board.querySelector('.wheel.selected[data-wheel="1"]'),'hub selection was lost');
+    const center = g.Art.wheelPoint(g.LEVELS[1],1); center.y-=44;
+    function headEvent(type,degrees) {
+      const angle = degrees*Math.PI/180;
+      const p = new win.DOMPoint(center.x+102*Math.cos(angle),center.y+61*Math.sin(angle)).matrixTransform(board.getScreenCTM());
+      const target = type==='pointerdown'?board.querySelector('[data-cell="1"] .animal-hit'):board;
+      target.dispatchEvent(new win.PointerEvent(type,{bubbles:true,cancelable:true,pointerId:1,pointerType:'touch',isPrimary:true,button:0,clientX:p.x,clientY:p.y}));
+    }
+    headEvent('pointerdown',-90); headEvent('pointermove',-60); headEvent('pointerup',-60);
+    await sleep(350);
+    assert(g.Debug.getMoves()===1,'head swipe not counted once');
+    assert(g.Debug.getState().join('')===g.Engine.spin(g.LEVELS[1],initial,1,-1).next.join(''),'wrong group rotated');
+  });
+  await test('short straight swipes from the center work without a circular path', async () => {
+    for (const sign of [-1,1]) {
+      g.Debug.load(1);
+      const c=g.Art.hubPoint(g.LEVELS[1],0);
+      const p=new win.DOMPoint(c.x,c.y).matrixTransform(board.getScreenCTM());
+      const target=board.querySelector('.wheel[data-wheel="0"] .wheel-hit');
+      for(const [type,dx] of [['pointerdown',0],['pointermove',sign*28],['pointerup',sign*28]]) {
+        (type==='pointerdown'?target:board).dispatchEvent(new win.PointerEvent(type,{bubbles:true,cancelable:true,pointerId:1,pointerType:'touch',isPrimary:true,button:0,clientX:p.x+dx,clientY:p.y}));
+      }
+      await sleep(350);
+      assert(g.Debug.getMoves()===1,'28px center swipe failed');
+      assert(g.Debug.getState().join('')===g.Engine.spin(g.LEVELS[1],g.Engine.parse(g.LEVELS[1]),0,-sign).next.join(''),'center swipe wrong direction');
+    }
+  });
+  await test('after selecting a hub, swipe on empty board space keeps the same group', async () => {
+    g.Debug.load(1);
+    emit('pointerdown',1,0,1,0); emit('pointerup',1,0,1,0);
+    const p=new win.DOMPoint(80,90).matrixTransform(board.getScreenCTM());
+    for (const [type,dx] of [['pointerdown',0],['pointermove',28],['pointerup',28]]) board.dispatchEvent(new win.PointerEvent(type,{bubbles:true,cancelable:true,pointerId:1,pointerType:'touch',isPrimary:true,button:0,clientX:p.x+dx,clientY:p.y}));
+    await sleep(350);
+    assert(g.Debug.getMoves()===1,'empty-space swipe was ignored');
+    assert(g.Debug.getState().join('')===g.Engine.spin(g.LEVELS[1],g.Engine.parse(g.LEVELS[1]),1,-1).next.join(''),'selection switched');
+  });
+  await test('locked wheel does not move', async () => {
+    g.Debug.load(4); emit('pointerdown',1,0); emit('pointermove',1,60); emit('pointerup',1,60); await sleep(350);
+    assert(g.Debug.getMoves()===0,'locked wheel moved');
+  });
+  await test('linked pair previews eight animals and commits opposite rotations', async () => {
+    g.Debug.load(8);
+    for(const [w,d] of g.LEVELS[8].solution.slice(0,6)) assert(g.Debug.turn(w,d),'could not unlock linked pair');
+    const initial = g.Debug.getState(), moves=g.Debug.getMoves();
+    emit('pointerdown',0,0); emit('pointermove',0,60);
+    assert(board.querySelectorAll('#flying-sprites [data-orbit-cell]').length===8,'missing linked preview');
+    const a = board.querySelector('[data-rotor="0"] .rotor-spokes').getAttribute('transform');
+    const b = board.querySelector('[data-rotor="5"] .rotor-spokes').getAttribute('transform');
+    assert(Number(a.match(/[-\d.]+/)[0])<0,'primary preview not counterclockwise');
+    assert(Number(b.match(/[-\d.]+/)[0])>0,'linked preview not opposite');
+    emit('pointerup',0,60); await sleep(500);
+    assert(g.Debug.getState().join('')===g.Engine.spin(g.LEVELS[8],initial,0,-1).next.join(''),'linked commit incorrect');
+    assert(g.Debug.getMoves()===moves+1,'linked pair counted twice');
+  });
+  await test('Restart and level selection discard active preview', async () => {
+    for (const action of [()=>doc.getElementById('restart').click(),()=>g.Debug.load(2)]) {
+      g.Debug.load(1); emit('pointerdown',0,0); emit('pointermove',0,60); action();
+      emit('pointerup',0,60); await sleep(350);
+      assert(g.Debug.getMoves()===0 && !board.querySelector('[data-orbit-cell]'),'stale preview survived');
+    }
+  });
+  await test('keyboard and level-one win still work', async () => {
+    g.Debug.load(0);
+    const hub = board.querySelector('.wheel[data-wheel="1"]'); hub.focus();
+    hub.dispatchEvent(new win.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}));
+    await sleep(700);
+    assert(g.Debug.isWon() && !doc.getElementById('win-overlay').hidden,'level one did not win');
+  });
+  await test('tutorial guides selection and right swipe; wrong input, skip and restart are safe', async () => {
+    g.Debug.load(0); const initial=g.Debug.getState().join('');
+    assert(!doc.getElementById('tutorial').hidden,'tutorial missing');
+    assert(doc.getElementById('tutorial-title').textContent.startsWith('1/2'),'missing selection step');
+    emit('pointerdown',0,0); emit('pointermove',0,60); emit('pointerup',0,60);
+    assert(g.Debug.getMoves()===0,'wrong tutorial wheel changed the board');
+    emit('pointerdown',1,0); emit('pointerup',1,0);
+    assert(doc.getElementById('tutorial-title').textContent.startsWith('2/2'),'missing swipe step');
+    emit('pointerdown',1,0); emit('pointermove',1,-60); emit('pointerup',1,-60); await sleep(200);
+    assert(g.Debug.getMoves()===0 && g.Debug.getState().join('')===initial,'wrong swipe spoiled tutorial');
+    doc.getElementById('tutorial-skip').click();
+    assert(doc.getElementById('tutorial').hidden && g.Debug.turn(0,1),'skip did not enable free play');
+    doc.getElementById('restart').click();
+    assert(!doc.getElementById('tutorial').hidden && g.Debug.getMoves()===0,'restart did not reset tutorial');
+    emit('pointerdown',1,0); emit('pointermove',1,60); emit('pointerup',1,60); await sleep(500);
+    assert(g.Debug.isWon() && doc.getElementById('tutorial').hidden,'guided swipe did not complete level');
+  });
+  await test('one-way refuses wrong swipe without committing; allowed swipe works', async () => {
+    g.Debug.load(3); const initial=g.Debug.getState().join('');
+    assert(board.querySelector('.one-way-badge'),'one-way badge missing');
+    emit('pointerdown',1,0); emit('pointermove',1,60); emit('pointerup',1,60); await sleep(200);
+    assert(g.Debug.getMoves()===0 && g.Debug.getState().join('')===initial,'forbidden direction committed');
+    assert(!board.classList.contains('dragging'),'forbidden preview left the board busy');
+    emit('pointerdown',1,0); emit('pointermove',1,-60); emit('pointerup',1,-60); await sleep(200);
+    assert(g.Debug.getMoves()===1,'allowed direction failed');
+  });
+  await test('rune lock opens on its trigger, allows a move and closes after Undo', async () => {
+    g.Debug.load(5); const initial=g.Debug.getState().join('');
+    emit('pointerdown',1,0); emit('pointermove',1,60); emit('pointerup',1,60);
+    assert(g.Debug.getMoves()===0 && g.Debug.getState().join('')===initial,'closed rune moved');
+    assert(g.Debug.turn(2,-1),'could not place trigger animal');
+    assert(board.querySelector('.rune-trigger.open[data-trigger="1"]'),'trigger did not light');
+    emit('pointerdown',1,0); emit('pointermove',1,-60); emit('pointerup',1,-60); await sleep(200);
+    assert(g.Debug.getMoves()===2,'open rune move failed');
+    assert(g.Debug.undo() && g.Debug.undo(),'Undo failed');
+    assert(board.querySelector('.wheel.rune-locked[data-wheel="1"]'),'Undo did not close rune');
+    assert(!board.querySelector('.rune-trigger.open[data-trigger="1"]'),'trigger stayed lit');
+  });
+  results.dataset.complete = 'true';
+  document.title = lines.some(line=>line.startsWith('FAIL')) ? 'FAIL' : 'PASS';
+};
+</script>

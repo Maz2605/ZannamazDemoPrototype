@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+.vercel/
+.netlify/
+node_modules/
+dist/
+test-results/
+.superpowers/
+.env
+.env.*
+!.env.example
+*.log
+__pycache__/
+*.py[cod]

@@ -1,0 +1,14 @@
+{
+  "id": "my-game",
+  "title": "Tên game của bạn",
+  "category": "Puzzle",
+  "version": "0.1",
+  "description": "Mô tả ngắn về ý tưởng và trải nghiệm của game.",
+  "thumbnail": "./thumbnail.svg",
+  "entry": "./index.html",
+  "orientation": "responsive",
+  "rules": ["Bấm nút để hoàn thành bản mẫu. Thay nội dung này bằng luật thật của game."],
+  "features": ["Điểm nổi bật của game"],
+  "controls": ["Chuột, chạm hoặc bàn phím."],
+  "notes": ["Module mẫu, chưa đăng ký trong thư viện."]
+}

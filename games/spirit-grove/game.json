@@ -1,0 +1,27 @@
+{
+  "id": "spirit-grove",
+  "title": "Spirit Grove",
+  "category": "Puzzle",
+  "version": "0.1",
+  "description": "Xoay vòng phép, đưa linh thú về đúng cột.",
+  "thumbnail": "./thumbnail.png",
+  "entry": "./index.html",
+  "orientation": "portrait",
+  "levelCount": 10,
+  "rules": [
+    "Đưa linh thú về đúng cột.",
+    "Chọn trục, vuốt để xoay 4 con một phần tư vòng.",
+    "Vòng khóa không xoay; bánh răng quay ngược nhau.",
+    "Trục một chiều chỉ nhận hướng vuốt được đánh dấu.",
+    "Khóa ấn mở khi đúng loài đứng trên bệ cùng dấu; rời bệ thì khóa đóng lại."
+  ],
+  "features": ["10 màn chọn tự do", "Tutorial tương tác ở màn đầu", "Trục một chiều · Khóa ấn theo linh thú", "Vòng giao nhau, khóa và bánh răng", "Undo · Restart · Gợi ý"],
+  "controls": [
+    "Chạm chọn trục, vuốt để xoay.",
+    "Máy tính: Tab chọn trục, ← / → xoay."
+  ],
+  "notes": [
+    "Prototype SVG 2.5D; chưa lưu tiến trình.",
+    "Gợi ý theo lời giải mẫu."
+  ]
+}
