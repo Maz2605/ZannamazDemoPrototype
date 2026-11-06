@@ -1,0 +1,414 @@
+/**
+ * Paint Match - Stylesheet
+ * Giao diện tiệm màu ngọt ngào, tối ưu cảm ứng và hiển thị trong khung thiết bị Arcade.
+ */
+
+:root {
+  --g1: #ffd1e8;
+  --g2: #d7c6ff;
+  --g3: #c4ecff;
+  --card: #ffffff;
+  --ink: #4a3868;
+  --mute: #8c7aa8;
+  --ok: #ff548d;
+  --ok-hover: #ff3b7c;
+  --panel: #fff8fc;
+  --border: #f0e6f5;
+  --shadow: 0 4px 12px rgba(74, 56, 104, 0.08);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --g1: #351c3d;
+    --g2: #241f4d;
+    --g3: #183344;
+    --card: #281f42;
+    --ink: #f8f2ff;
+    --mute: #c4b4e6;
+    --ok: #ff6fa5;
+    --ok-hover: #ff85b3;
+    --panel: #201838;
+    --border: #3d315f;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: linear-gradient(160deg, var(--g1), var(--g2) 55%, var(--g3));
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#app {
+  width: 100%;
+  max-width: 440px;
+  padding: 12px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Header & Navigation */
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title-group h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-group h1 .palette-icon {
+  font-size: 26px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Nút bấm chung */
+button {
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(74, 56, 104, 0.15);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(74, 56, 104, 0.15);
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 0 rgba(74, 56, 104, 0.1);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--ok);
+  outline-offset: 2px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 17px;
+  border-radius: 12px;
+}
+
+.lvl-picker-btn {
+  padding: 7px 12px;
+  font-size: 14px;
+  background: var(--card);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lvl-picker-btn .arrow-down {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Thẻ thông tin trạng thái & tiến độ */
+.card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mv {
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--ok);
+  background: rgba(255, 84, 141, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.bar {
+  height: 16px;
+  border-radius: 99px;
+  background: rgba(74, 56, 104, 0.08);
+  overflow: hidden;
+  flex: 1;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #ff8fb3, #ffd93d, #6bd68b, #5ab8ff);
+  transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.chips {
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--mute);
+  line-height: 1.35;
+}
+
+.chip-item {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Dòng thông báo nổi */
+.msg {
+  min-height: 22px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ok);
+  padding: 0 4px;
+}
+
+/* Canvas trò chơi */
+canvas {
+  width: 100%;
+  aspect-ratio: 340 / 540;
+  touch-action: none;
+  border-radius: 26px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgba(74, 56, 104, 0.14);
+  display: block;
+  border: 1px solid var(--border);
+}
+
+/* Hàng nút dưới cùng */
+.bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn-secondary {
+  flex: 1;
+  background: var(--card);
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.btn-reset {
+  flex: 1;
+  background: var(--card);
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+/* Overlay Modal (Thắng / Thua / Chọn màn) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 50, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.on {
+  display: flex;
+  opacity: 1;
+}
+
+.modal-box {
+  background: var(--card);
+  border-radius: 28px;
+  padding: 26px 22px;
+  width: 100%;
+  max-width: 330px;
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay.on .modal-box {
+  transform: scale(1);
+}
+
+.modal-box h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.modal-box p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.45;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--ok);
+  color: #ffffff;
+  border-color: transparent;
+  padding: 12px 16px;
+  font-size: 15px;
+  box-shadow: 0 3px 0 rgba(190, 40, 80, 0.4);
+}
+
+.btn-primary:active {
+  background: var(--ok-hover);
+  box-shadow: 0 1px 0 rgba(190, 40, 80, 0.4);
+}
+
+/* Modal Chọn màn chơi */
+.lvl-modal-box {
+  max-width: 360px;
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 15px;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.lvl-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  gap: 4px;
+  text-align: center;
+}
+
+.lvl-card:active {
+  background: rgba(255, 84, 141, 0.08);
+}
+
+.lvl-card.active {
+  background: rgba(255, 84, 141, 0.12);
+  border-color: var(--ok);
+}
+
+.lvl-card .lvl-icon {
+  font-size: 26px;
+  margin-bottom: 2px;
+}
+
+.lvl-card .lvl-num {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--ok);
+  text-transform: uppercase;
+}
+
+.lvl-card .lvl-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+

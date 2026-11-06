@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Paint Match - Trò chơi ghép 3 giọt sơn đầy sắc màu để vẽ tranh pixel art nghệ thuật.">
+  <title>Paint Match - Tiệm Tranh Sắc Màu</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <script defer src="./src/constants.js"></script>
+  <script defer src="./src/levels.js"></script>
+  <script defer src="./src/engine.js"></script>
+  <script defer src="./src/renderer.js"></script>
+  <script defer src="./src/audio.js"></script>
+  <script defer src="./src/game.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header Điều khiển màn & âm thanh -->
+    <header class="header-row">
+      <div class="title-group">
+        <h1><span class="palette-icon">🎨</span> Paint Match</h1>
+      </div>
+      <nav class="nav" aria-label="Điều hướng màn chơi">
+        <button id="prev" class="icon-btn" aria-label="Màn trước" title="Màn trước">‹</button>
+        <button id="lvl-picker-btn" class="lvl-picker-btn" aria-label="Chọn màn chơi" title="Bấm để chọn màn">
+          Màn <span id="lvl">1/10</span> <span class="arrow-down">▾</span>
+        </button>
+        <button id="next" class="icon-btn" aria-label="Màn sau" title="Màn sau">›</button>
+        <button id="sound-btn" class="icon-btn" aria-label="Bật/Tắt âm thanh" title="Âm thanh">🔊</button>
+      </nav>
+    </header>
+
+    <!-- Thẻ tiến độ và gợi ý màn chơi -->
+    <section class="card" aria-label="Thông tin màn chơi">
+      <div class="status-row">
+        <div class="mv" id="mv" aria-label="Số lượt đi còn lại">👆 20</div>
+        <div class="bar" role="progressbar" aria-label="Tiến độ vẽ tranh" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <i id="pf"></i>
+        </div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </section>
+
+    <!-- Dòng thông báo nổi -->
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+    <!-- Khung vẽ Canvas Match-3 và Tranh Pixel -->
+    <canvas id="cv" width="680" height="1080" aria-label="Bàn chơi Match-3 và khung tranh vẽ"></canvas>
+
+    <!-- Hàng nút chân trang -->
+    <footer class="bottom-row">
+      <button id="select-lvl-btn" class="btn-secondary" type="button">
+        ⭐ Chọn màn
+      </button>
+      <button id="reset" class="btn-reset" type="button">
+        ↺ Chơi lại
+      </button>
+    </footer>
+  </div>
+
+  <!-- Modal Kết thúc: Thắng hoặc Thua -->
+  <div id="ov" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ovt">
+    <div class="modal-box">
+      <h2 id="ovt"></h2>
+      <p id="ovp"></p>
+      <div id="ovb" class="modal-actions"></div>
+    </div>
+  </div>
+
+  <!-- Modal Bảng chọn màn chơi -->
+  <div id="lvl-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lvl-modal-title">
+    <div class="modal-box lvl-modal-box">
+      <div class="modal-header">
+        <h3 id="lvl-modal-title">🎨 Chọn màn chơi</h3>
+        <button id="close-lvl-modal" class="close-btn" type="button" aria-label="Đóng bảng chọn màn">✕</button>
+      </div>
+      <div class="level-grid" id="lvl-grid"></div>
+    </div>
+  </div>
+</body>
+</html>
+

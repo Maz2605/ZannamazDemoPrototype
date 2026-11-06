@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe4f0" />
+      <stop offset="50%" stop-color="#ebd9fc" />
+      <stop offset="100%" stop-color="#d6f0ff" />
+    </linearGradient>
+
+    <!-- Card Shadow -->
+    <filter id="softShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#4a3868" flood-opacity="0.15" />
+    </filter>
+    <filter id="tileShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- Nền chính -->
+  <rect width="400" height="300" rx="24" fill="url(#bgGrad)" />
+
+  <!-- Khung tranh Pixel Art thu nhỏ -->
+  <g transform="translate(130, 24)" filter="url(#softShadow)">
+    <rect width="140" height="110" rx="16" fill="#ffffff" stroke="#ffb3d1" stroke-width="3" />
+    
+    <!-- Mini Pixel Heart (8x8) -->
+    <g transform="translate(30, 15)">
+      <!-- Row 1 -->
+      <rect x="10" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="20" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="50" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="60" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
+      
+      <!-- Row 2 -->
+      <rect x="0" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="10" y="10" width="10" height="10" rx="2" fill="#ffffff" stroke="#ff8fb3" stroke-width="1" />
+      <rect x="20" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="30" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="40" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="50" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="60" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="70" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+
+      <!-- Row 3 -->
+      <rect x="0" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="10" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="20" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="30" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="40" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="50" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="60" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="70" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+
+      <!-- Row 4 -->
+      <rect x="10" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="20" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="30" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="40" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="50" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="60" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+
+      <!-- Row 5 -->
+      <rect x="20" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="30" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="40" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="50" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
+
+      <!-- Row 6 -->
+      <rect x="30" y="50" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="40" y="50" width="10" height="10" rx="2" fill="#ff8fb3" />
+    </g>
+
+    <text x="70" y="98" font-family="'Segoe UI', system-ui, sans-serif" font-weight="800" font-size="11" fill="#8c7aa8" text-anchor="middle">PIXEL ART CANVAS</text>
+  </g>
+
+  <!-- Giọt sơn bay lượn trên đường cong -->
+  <path d="M 120 180 Q 150 110 200 110" fill="none" stroke="#ff8fb3" stroke-width="3" stroke-dasharray="4,4" />
+  <circle cx="160" cy="130" r="7" fill="#ff8fb3" filter="url(#tileShadow)" />
+  <circle cx="185" cy="115" r="5" fill="#ff8fb3" />
+
+  <!-- Bàn cờ kẹo Match-3 bên dưới -->
+  <g transform="translate(60, 160)" filter="url(#softShadow)">
+    <rect width="280" height="110" rx="20" fill="#ffffffcc" stroke="#e6dcf0" stroke-width="2" />
+    
+    <!-- 4 Bạn Giọt Sơn Đáng Yêu -->
+    <!-- Giọt Hồng (Pink) -->
+    <g transform="translate(42, 50)" filter="url(#tileShadow)">
+      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#ff8fb3" stroke="#00000018" stroke-width="2" />
+      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
+      <!-- Mắt & Miệng -->
+      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
+      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
+      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+      <ellipse cx="-13" cy="5" rx="3.5" ry="2" fill="#ff6b9a55" />
+      <ellipse cx="13" cy="5" rx="3.5" ry="2" fill="#ff6b9a55" />
+    </g>
+
+    <!-- Giọt Xanh Trời (Blue) với Cọ Vẽ -->
+    <g transform="translate(108, 50)" filter="url(#tileShadow)">
+      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#5ab8ff" stroke="#00000018" stroke-width="2" />
+      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
+      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
+      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
+      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+      <!-- Cọ vẽ icon -->
+      <text x="14" y="-12" font-size="16">🖌️</text>
+    </g>
+
+    <!-- Giọt Vàng Chuối (Yellow) -->
+    <g transform="translate(174, 50)" filter="url(#tileShadow)">
+      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#ffd93d" stroke="#00000018" stroke-width="2" />
+      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
+      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
+      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
+      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+    </g>
+
+    <!-- Giọt Xanh Bơ (Green) -->
+    <g transform="translate(238, 50)" filter="url(#tileShadow)">
+      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#6bd68b" stroke="#00000018" stroke-width="2" />
+      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
+      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
+      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
+      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
+      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <!-- Sparkles -->
+  <text x="80" y="60" font-size="18">✨</text>
+  <text x="310" y="80" font-size="22">✨</text>
+  <text x="40" y="140" font-size="20">🎨</text>
+  <text x="345" y="170" font-size="20">🪣</text>
+</svg>
+

@@ -6,6 +6,10 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 button:disabled{opacity:.4;cursor:not-allowed}
 .app-shell{width:100%;max-width:650px;background:#fffef9;border:1px solid #dceadf;border-radius:22px;overflow:hidden;box-shadow:0 14px 45px #416b5122}
 .app-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 19px 14px}
+.header-actions{display:flex;align-items:center;gap:8px}
+.audio-toggle{background:#eef6ef;border:1px solid #d4ead9;border-radius:10px;padding:7px 11px;font-size:16px;color:#2b6b55;line-height:1;transition:background .15s,transform .1s}
+.audio-toggle:hover{background:#dff0e2}
+.audio-toggle:active{transform:scale(.95)}
 .eyebrow{font-size:10px;letter-spacing:1.65px;color:#83a99a;font-weight:900}
 .app-headline h1{font-size:25px;letter-spacing:-.8px;line-height:1.2;margin:4px 0 0;color:#286b55;font-weight:950}
 .app-headline h1 span{font-size:19px;color:#dbaa4e}
@@ -14,28 +18,67 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .level-button{flex:1 0 36px;min-width:36px;height:39px;background:#f1f5ed;border:1px solid #dfebe0;border-radius:11px;color:#89a095;font-size:13px;font-weight:900}
 .level-button.current{background:#309570;border-color:#309570;color:white;box-shadow:0 3px 0 #227555}
 .level-button.done:not(.current){background:#d9f0df;color:#318660}
-.level-button:focus-visible,.action-button:focus-visible,.primary-button:focus-visible{outline:3px solid #dfae4c;outline-offset:2px}
+.level-button:focus-visible,.action-button:focus-visible,.primary-button:focus-visible,.audio-toggle:focus-visible{outline:3px solid #dfae4c;outline-offset:2px}
 .level-info{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#ecf5eb;border-top:1px solid #e2eee1;padding:13px 17px}
 .level-info h2{font-size:16px;margin:0;font-weight:950;color:#2f6f57;line-height:1.4}
 .level-subtitle{font-size:11px;color:#799789;line-height:1.45;margin-top:2px}
 .progress{text-align:right;flex:0 0 106px;font-size:12px;color:#678e78}.progress strong{font-size:17px;color:#2f8a65}
 .progress-track{height:7px;border-radius:9px;background:#cce3d1;overflow:hidden;margin-top:5px}.progress-fill{height:100%;width:0;background:#4aaf80;border-radius:10px;transition:width .25s ease}
-.scene{position:relative;background:#e6f4ed;isolation:isolate;overflow:hidden}
-.scene svg{display:block;width:100%;height:auto;max-height:570px;touch-action:none;user-select:none;-webkit-user-select:none}
-.wheel{cursor:grab;outline:none;touch-action:none}
-.wheel-target{cursor:grab;touch-action:none}
-.wheel .wheel-hit{stroke:transparent;stroke-width:3}
-.wheel:not(.locked):hover .wheel-hit,.wheel:focus-visible .wheel-hit{stroke:#d6a94d;fill:#ffdf8e22}
-.wheel.active .wheel-hit{stroke:#d6a94d;fill:#ffdf8e33;stroke-dasharray:5 5}
-.wheel.active .wheel-body{filter:brightness(1.15)}
-.wheel.selected .wheel-hit{stroke:#d6a94d;stroke-dasharray:5 5}
-.animal-hit{cursor:grab;stroke:transparent;stroke-width:2}
-.selected-animal .animal-hit{stroke:#d6a94d;stroke-dasharray:4 5}
-.wheel.locked{opacity:.7;cursor:not-allowed}
+
+/* Scene Camera — Perspective & 3D Depth */
+.scene{position:relative;background:#e6f4ed;isolation:isolate;overflow:hidden;perspective:1000px}
+.scene svg{display:block;width:100%;height:auto;max-height:570px;touch-action:none;user-select:none;-webkit-user-select:none;transform:rotateX(7deg) scale(1.03);transform-origin:50% 50%;transition:transform .2s ease}
+
+/* OPTION 3: Floating Elevated Crystal Hubs */
+.floating-crystal-hub{cursor:pointer;outline:none;touch-action:none}
+.wheel-target{cursor:pointer;touch-action:none}
+.floating-gem-body{transition:transform .25s cubic-bezier(.2,1.2,.3,1),filter .25s ease}
+.floating-crystal-hub .crystal-beam{transition:opacity .2s ease}
+.floating-crystal-hub .crystal-ground-shadow{transition:opacity .2s,rx .2s,ry .2s}
+.floating-crystal-hub:not(.locked):hover .floating-gem-body,
+.floating-crystal-hub:focus-visible .floating-gem-body{
+  transform:translateY(-5px);
+  filter:drop-shadow(0 6px 12px rgba(245,158,11,.35));
+}
+.floating-crystal-hub:not(.locked):hover .crystal-beam{opacity:.35}
+.floating-crystal-hub:not(.locked):hover .hub-beacon.floating{
+  opacity:1;
+  stroke-width:3.8px;
+  stroke:#f59e0b;
+}
+
+/* Selected state for floating crystal */
+.floating-crystal-hub.selected .floating-gem-body{
+  transform:translateY(-6px);
+  filter:drop-shadow(0 0 16px rgba(245,158,11,.65));
+}
+.floating-crystal-hub.selected .hub-beacon.floating{
+  opacity:1;
+  stroke:#f59e0b;
+  stroke-width:4px;
+  animation:crystal-beacon-pulse 1.8s ease-in-out infinite;
+}
+.floating-crystal-hub.selected .crystal-beam{
+  opacity:.48;
+}
+.floating-crystal-hub.active .floating-gem-body{
+  filter:brightness(1.2) drop-shadow(0 0 20px rgba(245,158,11,.8));
+}
+
+@keyframes crystal-beacon-pulse{
+  0%,100%{opacity:.7;stroke-width:3.5px}
+  50%{opacity:1;stroke-width:4.8px}
+}
+
+.wheel.locked{opacity:.75;cursor:not-allowed}
+.wheel.locked .floating-gem-body{transform:none!important;filter:grayscale(.3)!important}
 .wheel-track{opacity:.15;transition:opacity .15s}
 .wheel-track.active,.wheel-track.selected{opacity:.85;stroke:#d1a34c}
+.animal-hit{cursor:pointer;stroke:transparent;stroke-width:2}
+.selected-animal .animal-hit{stroke:#d6a94d;stroke-dasharray:4 5}
 .dragging,.dragging .wheel{cursor:grabbing}
 #flying-sprites{pointer-events:none}
+
 .swipe-guide{padding:10px 14px;text-align:center;background:#f7f1df;border-top:1px solid #e5d9b6;color:#72603b;line-height:1.5}
 .swipe-guide strong{display:block;font-size:12px}.swipe-guide span{font-size:12px;color:#43876a}.swipe-guide b{padding:0 9px;color:#b5a47b}
 .tutorial{position:absolute;z-index:5;top:7px;left:10px;right:10px;padding:8px 10px;border:1px solid #d5b75e;border-radius:12px;background:#fffbeeef;color:#665124;box-shadow:0 3px 12px #69562815;display:grid;grid-template-columns:1fr auto;gap:2px 7px}
@@ -43,7 +86,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .tutorial button{font:inherit;font-size:10px;border:0;background:#efe5c7;color:#74602c;padding:2px 7px;border-radius:7px}
 .tutorial-hand{display:inline-block;animation:tutorial-swipe 1.4s ease-in-out infinite}
 @keyframes tutorial-swipe{0%,100%{transform:translateX(0)}60%{transform:translateX(12px)}}
-.wheel.tutorial-focus .wheel-hit{stroke:#c79523;stroke-width:4;stroke-dasharray:5 5}
+.wheel.tutorial-focus .floating-gem-body{filter:drop-shadow(0 0 16px #f59e0b)!important}
+.wheel.tutorial-focus .hub-beacon{stroke:#c79523;stroke-width:4;stroke-dasharray:5 5;opacity:1}
 .wheel-track.tutorial-focus{opacity:1;stroke:#d3a12d;stroke-width:3}
 .toast{position:absolute;z-index:6;left:50%;bottom:16px;transform:translate(-50%,10px);border-radius:12px;background:#2e6153ee;color:white;padding:10px 14px;font-size:12px;font-weight:750;line-height:1.4;max-width:87%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 8px 20px #1a3b3130}
 .toast.visible{opacity:1;transform:translate(-50%,0)}

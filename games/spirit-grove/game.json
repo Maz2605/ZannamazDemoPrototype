@@ -2,26 +2,35 @@
   "id": "spirit-grove",
   "title": "Spirit Grove",
   "category": "Puzzle",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Xoay vòng phép, đưa linh thú về đúng cột.",
   "thumbnail": "./thumbnail.png",
   "entry": "./index.html",
   "orientation": "portrait",
-  "levelCount": 10,
+  "levelCount": 15,
   "rules": [
     "Đưa linh thú về đúng cột.",
-    "Chọn trục, vuốt để xoay 4 con một phần tư vòng.",
-    "Vòng khóa không xoay; bánh răng quay ngược nhau.",
+    "Chọn trục ngã tư, vuốt để xoay 4 con một phần tư vòng.",
+    "Vòng phong ấn không xoay; bánh răng xoay ngược nhau.",
+    "Trục song sinh xoay cùng chiều đồng điệu.",
     "Trục một chiều chỉ nhận hướng vuốt được đánh dấu.",
-    "Khóa ấn mở khi đúng loài đứng trên bệ cùng dấu; rời bệ thì khóa đóng lại."
+    "Khóa ấn đơn và ấn kép mở khi đúng loài đứng trên bệ kích hoạt.",
+    "Ấn băng giá tan chảy khi có Cáo sưởi ấm bệ kề bên.",
+    "Bẫy gai cấm linh thú chỉ định bước vào bệ."
   ],
-  "features": ["10 màn chọn tự do", "Tutorial tương tác ở màn đầu", "Trục một chiều · Khóa ấn theo linh thú", "Vòng giao nhau, khóa và bánh răng", "Undo · Restart · Gợi ý"],
+  "features": [
+    "15 màn giải đố tự do",
+    "8 hệ thống Blocker chiến thuật",
+    "Âm thanh Web Audio tổng hợp & BGM Zen rừng",
+    "Camera góc nghiêng trực quan, ngã tư dễ chạm chọn",
+    "Undo · Restart · Gợi ý thông minh"
+  ],
   "controls": [
-    "Chạm chọn trục, vuốt để xoay.",
+    "Chạm trục ở ngã tư, vuốt để xoay.",
     "Máy tính: Tab chọn trục, ← / → xoay."
   ],
   "notes": [
-    "Prototype SVG 2.5D; chưa lưu tiến trình.",
-    "Gợi ý theo lời giải mẫu."
+    "Prototype SVG 2.5D; 15 màn có lời giải tối ưu BFS.",
+    "Gợi ý theo lời giải mẫu; hỗ trợ bật/tắt âm thanh."
   ]
 }

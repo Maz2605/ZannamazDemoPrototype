@@ -1,0 +1,36 @@
+{
+  "id": "slice-cut",
+  "title": "Slice Cut",
+  "category": "Puzzle",
+  "version": "0.3",
+  "description": "Tiệm bánh kẹo ngọt ngào: Cắt bánh khéo léo để mỗi phần chỉ chứa kẹo một màu duy nhất.",
+  "thumbnail": "./thumbnail.svg",
+  "entry": "./index.html",
+  "orientation": "portrait",
+  "levelCount": 20,
+  "rules": [
+    "Vuốt một đường để cắt bánh: đường cắt kéo dài xuyên qua chiếc bánh.",
+    "Mỗi phần bánh sau khi cắt chỉ được chứa kẹo của đúng một màu.",
+    "Kẹo Ngôi Sao Vạn Năng (⭐) có thể kết hợp cùng bất kỳ màu kẹo nào.",
+    "Không được cắt trúng các bạn kẹo thường hoặc khối băng kem (🧊).",
+    "Tránh cắt trúng bom đen (💣), thanh thép (🔩) hoặc làm đứt dây nơ buộc (🧵).",
+    "Hoàn thành trong giới hạn số nhát cắt và thời gian quy định (nếu có)."
+  ],
+  "features": [
+    "20 màn chơi giải đố hoàn toàn mới được thiết kế tinh tế",
+    "Blocker mới: Tảng Băng Kem (🧊) cứng cáp và Kẹo Ngôi Sao Vạn Năng (⭐)",
+    "Loại bỏ hoàn toàn cơ chế xoay/trượt thời gian thực để tập trung vào logic thuần túy",
+    "Bảng chọn tự do 20 màn chơi mọi lúc",
+    "Hiệu ứng nảy nhẹ mềm mại (soft elastic bounce) tự nhiên khi chém lát bánh",
+    "Âm thanh vui nhộn, đồ họa tiệm bánh kẹo pastel thân thiện với trẻ em"
+  ],
+  "controls": [
+    "Kéo vuốt trên mặt bánh để định vị đường cắt.",
+    "Thả tay ra để thực hiện nhát chém bánh.",
+    "Bấm 'Màn ▾' hoặc '⭐ Chọn màn' để chọn trực tiếp bất kỳ màn nào trong 20 màn chơi."
+  ],
+  "notes": [
+    "Đường cắt đi xuyên qua toàn bộ hình bánh.",
+    "Ở một số màn đặc biệt, chỉ cho phép cắt theo hướng thẳng ngang hoặc dọc."
+  ]
+}

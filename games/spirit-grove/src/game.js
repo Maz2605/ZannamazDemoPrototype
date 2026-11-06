@@ -4,7 +4,7 @@
  */
 (function (G) {
   'use strict';
-  const E = G.Engine, A = G.Art, Gesture = G.Gesture, LEVELS = G.LEVELS;
+  const E = G.Engine, A = G.Art, Gesture = G.Gesture, LEVELS = G.LEVELS, Audio = G.Audio;
   const $ = id => document.getElementById(id);
   const UI = {
     nav: $('level-nav'), board: $('board'), scene: $('scene'),
@@ -15,7 +15,8 @@
     moves: $('move-count'), par: $('par-count'), toast: $('toast'),
     win: $('win-overlay'), stars: $('win-stars'), winAnimals: $('win-animals'),
     winTitle: $('win-title'), winMessage: $('win-message'), next: $('next-level'), swipeGuide:$('swipe-guide'),
-    tutorial:$('tutorial'), tutorialTitle:$('tutorial-title'), tutorialText:$('tutorial-text'), tutorialSkip:$('tutorial-skip')
+    tutorial:$('tutorial'), tutorialTitle:$('tutorial-title'), tutorialText:$('tutorial-text'), tutorialSkip:$('tutorial-skip'),
+    audioToggle: $('audio-toggle')
   };
   let levelIndex = 0;
   let state = [];
@@ -36,6 +37,14 @@
     const errors = E.verify(entry);
     if (errors.length) throw Error(`Invalid level ${i+1}: ${errors.join(', ')}`);
   });
+
+  function updateAudioButton() {
+    if (!UI.audioToggle || !Audio) return;
+    const muted = Audio.isMuted();
+    UI.audioToggle.textContent = muted ? '🔇' : '🔊';
+    UI.audioToggle.title = muted ? 'Bật âm thanh' : 'Tắt âm thanh';
+  }
+  updateAudioButton();
 
   function toast(message) {
     UI.toast.textContent = message;
@@ -85,6 +94,8 @@
       const one=(level().oneWay||[]).find(([w])=>w===selectedWheel);
       if(one) UI.swipeGuide.textContent=`Vòng ${selectedWheel+1} một chiều · Chỉ vuốt ${one[1]===1?'trái ←':'phải →'}`;
       if(E.rotationGroup(level(),selectedWheel).some(([w])=>E.isRuneLocked(level(),state,w))) UI.swipeGuide.textContent=moveMessage(selectedWheel,'rune');
+      if(E.rotationGroup(level(),selectedWheel).some(([w])=>E.isDualLocked(level(),state,w))) UI.swipeGuide.textContent=moveMessage(selectedWheel,'dual-rune');
+      if(E.rotationGroup(level(),selectedWheel).some(([w])=>E.isFrostLocked(level(),state,w))) UI.swipeGuide.textContent=moveMessage(selectedWheel,'frost');
     }
     renderTutorial();
   }
@@ -101,7 +112,7 @@
   }
 
   function moveMessage(wheel, code) {
-    if(code==='sealed') return '🔒 Vòng phép này đã bị phong ấn.';
+    if(code==='sealed') return '🔒 Vòng phép này đã bị phong ấn đá cổ.';
     if(code==='one-way') {
       const allowed=[1,-1].find(d=>!E.moveError(level(),state,wheel,d));
       return `Trục một chiều · Chỉ vuốt ${allowed===1?'trái ←':'phải →'}.`;
@@ -110,6 +121,19 @@
       const affected=E.rotationGroup(level(),wheel).map(([w])=>w);
       const seal=(level().seals||[]).find(([w,c,a])=>affected.includes(w)&&state[c]!==a);
       return seal?`Ấn ${'①②③④⑤⑥'[seal[0]]} đang đóng · Đưa ${A.ANIMALS[seal[2]].name} lên bệ cùng dấu để mở.`:'Ấn của vòng liên kết đang đóng.';
+    }
+    if(code==='dual-rune') {
+      const affected=E.rotationGroup(level(),wheel).map(([w])=>w);
+      const dSeal=(level().dualSeals||[]).find(([w])=>affected.includes(w));
+      return dSeal?`☯ Ấn kép đang đóng · Cần cả ${A.ANIMALS[dSeal[2]].name} trên ☯₁ và ${A.ANIMALS[dSeal[4]].name} trên ☯₂.`:'Ấn kép của vòng liên kết đang đóng.';
+    }
+    if(code==='frost') {
+      const affected=E.rotationGroup(level(),wheel).map(([w])=>w);
+      const fSeal=(level().frost||[]).find(([w])=>affected.includes(w));
+      return fSeal?`❄ Trục bị đông cứng · Đưa ${A.ANIMALS[fSeal[2]].name} lên bệ sưởi ấm để làm tan băng.`:'Trục liên kết đang bị đóng băng.';
+    }
+    if(code==='trap') {
+      return '🥀 Bẫy gai cấm! Không thể đưa linh thú bị cấm vào bệ có bẫy.';
     }
     return 'Không thể xoay vòng phép này.';
   }
@@ -197,25 +221,70 @@
 
   function startDrag(e) {
     if (busy || won || drag || !e.isPrimary || e.button !== 0) return;
-    const target = e.target.closest('.wheel, .wheel-target');
-    let hub = target ? UI.board.querySelector(`.wheel[data-wheel="${Number(target.dataset.wheel)}"]`) : null;
+    Audio?.init();
+
+    // 1. Smart intersection hub snapping: effortlessly select hub by tap proximity
+    let hub = null, wheel = null;
+    if (UI.board.createSVGPoint && UI.board.getScreenCTM) {
+      try {
+        const pt = UI.board.createSVGPoint();
+        pt.x = e.clientX; pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(UI.board.getScreenCTM().inverse());
+        let bestDist = Infinity, closestW = null;
+        for (let w = 0; w < E.wheelCount(level()); w++) {
+          const hp = A.hubPoint(level(), w);
+          // Measure distance to elevated floating crystal (cy = hp.y - 24)
+          const d = Math.hypot((svgPt.x - hp.x) / 1.15, svgPt.y - (hp.y - 24));
+          if (d < bestDist) { bestDist = d; closestW = w; }
+        }
+        if (bestDist <= 64 && closestW !== null) {
+          wheel = closestW;
+          hub = UI.board.querySelector(`.wheel[data-wheel="${wheel}"]`);
+        }
+      } catch (err) {}
+    }
+
+    if (!hub) {
+      const target = e.target.closest('.wheel, .wheel-target');
+      hub = target ? UI.board.querySelector(`.wheel[data-wheel="${Number(target.dataset.wheel)}"]`) : null;
+    }
     const animal = !hub && e.target.closest('[data-cell]');
-    if (!hub && selectedWheel===null && !animal) return;
-    let wheel;
-    if (hub) wheel = Number(hub.dataset.wheel);
-    else if (selectedWheel!==null) wheel = selectedWheel;
-    else {
+    if (!hub && selectedWheel === null && !animal) return;
+
+    if (hub && wheel === null) wheel = Number(hub.dataset.wheel);
+    else if (wheel === null && selectedWheel !== null) wheel = selectedWheel;
+    else if (wheel === null && animal) {
       const cell = Number(animal.dataset.cell);
       const candidates = Array.from({length:E.wheelCount(level())},(_,w)=>w).filter(w=>!E.isBlocked(level(),w)&&E.wheelCells(level(),w).includes(cell));
-      if (!candidates.length) { toast('🔒 Hãy chọn một trục không bị phong ấn.'); return; }
+      if (!candidates.length) {
+        Audio?.playBlocker('sealed');
+        toast('🔒 Hãy chọn một trục không bị phong ấn.');
+        return;
+      }
       wheel = candidates.includes(selectedWheel)?selectedWheel:candidates[0];
     }
+
     hub ||= UI.board.querySelector(`.wheel[data-wheel="${wheel}"]`);
-    if (E.isBlocked(level(), wheel)) { toast('🔒 Vòng phép này đã bị phong ấn.'); return; }
-    if(tutorialActive && wheel!==level().solution[0][0]) { toast('Chọn trục vàng bên phải theo hướng dẫn nhé.'); return; }
-    selectedWheel=wheel;
+    if (E.isBlocked(level(), wheel)) {
+      Audio?.playBlocker('sealed');
+      toast('🔒 Vòng phép này đã bị phong ấn.');
+      return;
+    }
+    if(tutorialActive && wheel!==level().solution[0][0]) {
+      Audio?.playBlocker();
+      toast('Chọn trục vàng bên phải theo hướng dẫn nhé.');
+      return;
+    }
+
+    selectedWheel = wheel;
     highlightSelection();
-    if(E.rotationGroup(level(),wheel).some(([w])=>E.isRuneLocked(level(),state,w))) { toast(moveMessage(wheel,'rune')); return; }
+    Audio?.playSelect();
+
+    const group = E.rotationGroup(level(), wheel);
+    if(group.some(([w])=>E.isRuneLocked(level(),state,w))) { Audio?.playBlocker('rune'); toast(moveMessage(wheel,'rune')); return; }
+    if(group.some(([w])=>E.isDualLocked(level(),state,w))) { Audio?.playBlocker('dual-rune'); toast(moveMessage(wheel,'dual-rune')); return; }
+    if(group.some(([w])=>E.isFrostLocked(level(),state,w))) { Audio?.playBlocker('frost'); toast(moveMessage(wheel,'frost')); return; }
+
     e.preventDefault();
     UI.board.setPointerCapture(e.pointerId);
     hub.focus({ preventScroll:true });
@@ -259,17 +328,24 @@
     const tutorialError=tutorialActive && (wheel!==l.solution[0][0] || direction!==l.solution[0][1]);
     if (error || tutorialError) {
       UI.board.classList.remove('dragging'); renderBoard();
+      Audio?.playBlocker(error);
       toast(tutorialError?'Ở lượt đầu, chọn trục vàng rồi vuốt sang phải nhé.':moveMessage(wheel,error));
       return false;
     }
     let result;
     try { result = E.spin(l, state, wheel, direction); }
-    catch(e) { toast('Không thể xoay vòng phép này.'); return false; }
+    catch(e) {
+      Audio?.playBlocker();
+      toast('Không thể xoay vòng phép này.');
+      return false;
+    }
     selectedWheel = wheel;
     const source = state.slice();
     history.push({ state: source, wheel, direction });
     tutorialActive=false;
     state = result.next;
+    Audio?.playSpin(direction);
+
     if (immediate) {
       render();
       if (E.isWin(l,state)) showWin(true);
@@ -293,15 +369,17 @@
   function showWin(immediate = false) {
     if (won) return;
     won = true;
+    Audio?.playWin();
     UI.tutorial.hidden=true;
     completed.add(levelIndex);
-    const l = level(),moves = history.length;
+    const l = level(), moves = history.length;
     const stars = moves<=l.par ? 3 : moves<=l.par+2 ? 2 : 1;
+    const isFinalLevel = levelIndex === LEVELS.length - 1;
     UI.stars.textContent = '★'.repeat(stars) + '☆'.repeat(3-stars);
     UI.winAnimals.textContent = A.ANIMALS.slice(0,l.cols).map(a=>a.emoji).join(' ');
-    UI.winTitle.textContent = levelIndex===9 ? 'Đã vượt qua 10 level!' : 'Hòn đảo linh thú hồi sinh!';
-    UI.winMessage.textContent = `Bạn đưa ${state.length} linh thú về đúng vị trí sau ${moves} lượt. Lời giải ngắn nhất: ${l.par} lượt.`;
-    UI.next.textContent = levelIndex===9 ? '↻ Chơi lại từ Level 1' : 'Level tiếp theo →';
+    UI.winTitle.textContent = isFinalLevel ? 'Chúc mừng! Bạn đã hoàn thành toàn bộ 15 level!' : 'Hòn đảo linh thú hồi sinh!';
+    UI.winMessage.textContent = `Bạn đưa ${state.length} linh thú về đúng vị trí sau ${moves} lượt. Lời giải tối ưu: ${l.par} lượt.`;
+    UI.next.textContent = isFinalLevel ? '↻ Chơi lại từ Level 1' : 'Level tiếp theo →';
     renderNavigation();
     renderLevelInfo();
     if (immediate) UI.win.hidden = false;
@@ -312,6 +390,7 @@
     if (busy || won) return false;
     cancelDrag();
     if (!history.length) return false;
+    Audio?.playUndo();
     state = history.pop().state;
     render();
     return true;
@@ -320,6 +399,7 @@
   function hint() {
     if (busy || won) return;
     cancelDrag();
+    Audio?.playHint();
     const l=level();
     // If player followed the author's path, display the next verified move.
     let pathState=E.parse(l);
@@ -333,7 +413,7 @@
     }
     // Directed/rune restrictions can forbid inverse moves. Undo restores snapshots.
     if (history.length) {
-      toast('Đang khác lời giải mẫu · Dùng Undo để quay lại; trục một chiều hoặc khóa ấn có thể chặn nước đảo ngược.');
+      toast('Đang khác lời giải mẫu · Dùng Undo để quay lại; các blocker có thể chặn nước đảo ngược.');
     } else toast('Bấm Restart để thử lại lời giải mẫu.');
   }
 
@@ -360,12 +440,16 @@
   UI.restart.addEventListener('click',()=>load(levelIndex));
   UI.hint.addEventListener('click',hint);
   UI.tutorialSkip.addEventListener('click',()=>{cancelDrag();tutorialActive=false;renderTutorial();});
-  UI.next.addEventListener('click',()=>load(levelIndex===9?0:levelIndex+1));
+  UI.next.addEventListener('click',()=>load(levelIndex===LEVELS.length-1?0:levelIndex+1));
+  UI.audioToggle?.addEventListener('click', () => {
+    Audio?.toggleMute();
+    updateAudioButton();
+  });
   document.addEventListener('keydown',e=>{
     if (e.key.toLowerCase()==='z'&&(e.ctrlKey||e.metaKey)) { e.preventDefault();undo(); }
     if (e.key.toLowerCase()==='r'&&e.altKey) { e.preventDefault();load(levelIndex); }
   });
-  // Lightweight diagnostic API for local automated tests, not gameplay.
+  // Diagnostic API for local automated tests
   G.Debug = Object.freeze({
     getLevel:()=>levelIndex,
     getState:()=>state.slice(),

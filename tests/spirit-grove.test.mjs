@@ -7,7 +7,7 @@ test('all levels have legal solutions; unconstrained inverse moves remain revers
   const context = vm.createContext({ window: {} });
   for (const file of ['levels', 'engine']) vm.runInContext(await readFile(new URL(`../games/spirit-grove/src/${file}.js`, import.meta.url), 'utf8'), context);
   const { Engine: engine, LEVELS: levels } = context.window.SpiritGrove;
-  assert.equal(levels.length, 10);
+  assert.equal(levels.length, 15);
   for (const level of levels) {
     assert.equal(engine.verify(level).length, 0, `level ${level.id}`);
     const start = engine.parse(level);

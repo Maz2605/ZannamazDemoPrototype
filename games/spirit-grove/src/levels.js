@@ -1,13 +1,20 @@
 /**
- * SPIRIT GROVE — LEVEL DATA
+ * SPIRIT GROVE — LEVEL DATA (15 Levels · 8 Blockers)
  *
  * rows/cols: grid dimensions (2x3, 3x3, 3x4)
  * start: row-major animal IDs, one char per pedestal; target = column index.
- * blocked: indices of disabled 2x2 rotation wheels, row-major.
- * link: [wheelA, wheelB, directionMultiplier] (1=same, -1=opposite).
- * oneWay: [[wheel, allowedDirection]], seals: [[wheel, triggerCell, animal]].
+ * 8 Blockers:
+ *   1. blocked: indices of disabled 2x2 rotation wheels, row-major. (🔒 Phong ấn vĩnh viễn)
+ *   2. oneWay: [[wheel, allowedDirection]] (↻/↺ Trục một chiều)
+ *   3. seals: [[wheel, triggerCell, animal]] (①–⑥ Ấn cổ ngữ đơn)
+ *   4. link [-1]: [wheelA, wheelB, -1] (⚙️ Bánh răng ngược chiều)
+ *   5. link [1]: [wheelA, wheelB, 1] (🪞 Bánh răng song sinh cùng chiều)
+ *   6. traps: [[cell, forbiddenAnimal]] (🥀 Bẫy gai cấm loài)
+ *   7. frost: [[wheel, heatCell, 0]] (❄️ Ấn băng giá cần Cáo sưởi ấm)
+ *   8. dualSeals: [[wheel, cellA, animalA, cellB, animalB]] (☯️ Ấn linh thú kép)
+ *
  * solution: one verified move sequence from start to target, [wheelIndex, direction].
- * par: tested shortest solution length (BFS-verified; see tools/validate_levels.py).
+ * par: tested shortest solution length (BFS-verified; see tools/solve-spirit-grove.mjs).
  *
  * Animal IDs: 0 Fox, 1 Rabbit, 2 Panda, 3 Owl.
  * All state changes are deterministic; see engine.js for the exact rules.
@@ -83,5 +90,45 @@ window.SpiritGrove.LEVELS = [
     icon: '🏆', rule: 'Thử thách tổng hợp',
     description: 'Gấu trúc giữ ấn ① cho cặp bánh răng; hai trục một chiều và hai vòng phong ấn thu hẹp mọi đường đi. Mỗi lần rời bệ, khóa sẽ đóng lại.',
     solution: [[2,1],[0,1],[4,-1],[0,1],[4,-1],[0,1],[2,1],[4,-1],[0,1],[2,1],[4,-1],[2,1],[4,-1],[0,1],[4,-1]]
+  },
+  {
+    id: 11, title: 'Gương thần song sinh', subtitle: 'Hai trục xoay cùng chiều đồng điệu.',
+    rows: 3, cols: 4, start: '012102331023', par: 7, theme: 'dawn',
+    link: [0, 5, 1], oneWay: [[2, 1]], blocked: [4],
+    icon: '🪞', rule: 'Bánh răng song sinh',
+    description: 'Xoay trục ① làm trục ⑥ xoay cùng chiều. Trục ③ chỉ nhận vuốt trái; vòng ⑤ bị phong ấn.',
+    solution: [[0,-1],[2,1],[2,1],[1,1],[3,-1],[0,-1],[0,-1]]
+  },
+  {
+    id: 12, title: 'Bẫy gai rừng thẳm', subtitle: 'Cáo không thể đặt chân vào bụi gai.',
+    rows: 3, cols: 3, start: '020110212', par: 7, theme: 'forest',
+    traps: [[4, 0]], oneWay: [[0, -1]],
+    icon: '🥀', rule: 'Bẫy gai cấm loài',
+    description: 'Bệ số ⑤ ở trung tâm có bẫy gai cấm Cáo 🦊. Bất kỳ thao tác nào đưa Cáo vào bệ này đều bị chặn!',
+    solution: [[1,-1],[2,-1],[0,-1],[2,-1],[1,-1],[0,-1],[1,-1]]
+  },
+  {
+    id: 13, title: 'Hơi ấm giải băng', subtitle: 'Lửa ấm của Cáo làm tan khối băng cổ.',
+    rows: 3, cols: 4, start: '102321120033', par: 7, theme: 'snow',
+    frost: [[3, 2, 0]], oneWay: [[5, -1]], blocked: [1],
+    icon: '❄️', rule: 'Phong ấn băng giá',
+    description: 'Trục ④ bị đóng băng cứng. Đưa Cáo 🦊 lên bệ ③ để hơi ấm làm tan băng. Trục ⑥ chỉ nhận vuốt phải.',
+    solution: [[0,-1],[4,-1],[0,-1],[4,1],[5,-1],[4,1],[0,1]]
+  },
+  {
+    id: 14, title: 'Đại trận âm dương', subtitle: 'Cần hai linh thú đồng thời giữ ấn.',
+    rows: 3, cols: 4, start: '032212330101', par: 7, theme: 'night',
+    dualSeals: [[1, 4, 1, 6, 2]], oneWay: [[4, 1]], blocked: [3],
+    icon: '☯️', rule: 'Khóa ấn linh thú kép',
+    description: 'Ấn kép ☯ trên trục ② chỉ mở khi bệ ⑤ có Thỏ 🐰 VÀ bệ ⑦ có Gấu trúc 🐼. Rời một trong hai bệ sẽ khóa lại ngay.',
+    solution: [[2,-1],[1,1],[5,1],[2,1],[1,-1],[4,1],[0,-1]]
+  },
+  {
+    id: 15, title: 'Đại đền linh thiêng', subtitle: 'Thử thách tối thượng 15 level.',
+    rows: 3, cols: 4, start: '110130220233', par: 10, theme: 'sunset',
+    link: [0, 5, 1], frost: [[4, 1, 0]], traps: [[7, 2]], oneWay: [[2, 1], [3, -1]],
+    icon: '🏛️', rule: 'Hội tụ tám ấn pháp',
+    description: 'Cặp bánh răng song sinh ①–⑥, trục ⑤ băng giá cần Cáo sưởi bệ ②, bệ ⑧ cấm Gấu trúc 🐼, cùng các trục một chiều. Khôi phục toàn bộ đền thờ!',
+    solution: [[0,-1],[4,-1],[4,-1],[0,-1],[1,-1],[4,1],[2,1],[4,1],[0,-1],[1,1]]
   }
 ];

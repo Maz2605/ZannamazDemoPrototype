@@ -81,14 +81,51 @@
     }
     return out;
   }
+
   function pedestal(level, state, i) {
     const {x,y}=pointForIndex(level,i),type=i%level.cols,p=ANIMALS[type],correct=state[i]===type;
     const front=`${x-56},${y} ${x},${y+32} ${x},${y+49} ${x-56},${y+17}`;
     const right=`${x},${y+32} ${x+56},${y} ${x+56},${y+17} ${x},${y+49}`;
-    const triggers=(level.seals||[]).filter(([,cell])=>cell===i).map(([w,,animal])=>{
+    
+    // Rune seals (single)
+    let triggers=(level.seals||[]).filter(([,cell])=>cell===i).map(([w,,animal])=>{
       const ready=state[i]===animal;
       return `<g class="rune-trigger ${ready?'open':''}" data-trigger="${w}"><rect x="${x-47}" y="${y+40}" width="94" height="22" rx="8" fill="${ready?'#e0f6d5':'#eee0ff'}" stroke="${ready?'#55a879':'#9471bd'}" stroke-width="2"/><text x="${x}" y="${y+55}" text-anchor="middle" fill="#59416e" font-size="14">${'①②③④⑤⑥'[w]} ${ANIMALS[animal].emoji} ${ready?'✓':'◇'}</text></g>`;
     }).join('');
+
+    // Dual rune triggers
+    (level.dualSeals||[]).forEach(([w, c1, a1, c2, a2]) => {
+      if (c1 === i) {
+        const ready = state[i] === a1;
+        triggers += `<g class="rune-trigger ${ready?'open':''}" data-trigger="${w}"><rect x="${x-47}" y="${y+40}" width="94" height="22" rx="8" fill="${ready?'#e0f6d5':'#efe6fb'}" stroke="${ready?'#55a879':'#8c67b8'}" stroke-width="2"/><text x="${x}" y="${y+55}" text-anchor="middle" fill="#543a6d" font-size="13">☯₁ ${ANIMALS[a1].emoji} ${ready?'✓':'◇'}</text></g>`;
+      }
+      if (c2 === i) {
+        const ready = state[i] === a2;
+        triggers += `<g class="rune-trigger ${ready?'open':''}" data-trigger="${w}"><rect x="${x-47}" y="${y+40}" width="94" height="22" rx="8" fill="${ready?'#e0f6d5':'#efe6fb'}" stroke="${ready?'#55a879':'#8c67b8'}" stroke-width="2"/><text x="${x}" y="${y+55}" text-anchor="middle" fill="#543a6d" font-size="13">☯₂ ${ANIMALS[a2].emoji} ${ready?'✓':'◇'}</text></g>`;
+      }
+    });
+
+    // Frost thawing trigger (requires Fox 🦊 / animal 0)
+    (level.frost||[]).forEach(([w, heatCell, heatAnimal]) => {
+      if (heatCell === i) {
+        const ready = state[i] === heatAnimal;
+        triggers += `<g class="rune-trigger frost-thaw ${ready?'open':''}" data-trigger="${w}"><rect x="${x-49}" y="${y+40}" width="98" height="22" rx="8" fill="${ready?'#fff1d6':'#e8f4fc'}" stroke="${ready?'#e89338':'#58a2d1'}" stroke-width="2"/><text x="${x}" y="${y+55}" text-anchor="middle" fill="#754714" font-size="13">🔥 ${ANIMALS[heatAnimal].emoji} ${ready?'Ấm ✓':'Lạnh ❄'}</text></g>`;
+      }
+    });
+
+    // Thorn traps (forbidden animal)
+    let trapArt = '';
+    const trap = (level.traps||[]).find(([c]) => c === i);
+    if (trap) {
+      trapArt = `<g class="thorn-trap" pointer-events="none">
+        <ellipse cx="${x}" cy="${y+2}" rx="46" ry="24" fill="none" stroke="#d6496b" stroke-width="3" stroke-dasharray="3 4"/>
+        <circle cx="${x+38}" cy="${y+2}" r="11" fill="#ffe4ea" stroke="#d6496b" stroke-width="2"/>
+        <text x="${x+38}" y="${y+6}" text-anchor="middle" font-size="11">🥀</text>
+        <rect x="${x-46}" y="${y-38}" width="92" height="18" rx="6" fill="#fff0f3" stroke="#d6496b" stroke-width="1.5"/>
+        <text x="${x}" y="${y-25}" text-anchor="middle" font-size="11" fill="#a02946" font-weight="bold">Cấm ${ANIMALS[trap[1]].emoji} 🚫</text>
+      </g>`;
+    }
+
     return `<g>
       <ellipse cx="${x}" cy="${y+43}" rx="56" ry="17" fill="#3f6d5736"/>
       <polygon points="${front}" fill="#C49D79" stroke="#B59B79"/>
@@ -100,44 +137,109 @@
       <circle cx="${x+8}" cy="${y+33}" r="13" fill="${p.land}" stroke="#fff9e8" stroke-width="2"/>
       <text x="${x+8}" y="${y+37}" text-anchor="middle" font-size="15">${p.emoji}</text>
       ${correct?`<circle cx="${x-35}" cy="${y+2}" r="10" fill="#4DAE7E" stroke="#fff" stroke-width="1.5"/><text x="${x-35}" y="${y+6}" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">✓</text>`:''}
+      ${trapArt}
       ${triggers}
     </g>`;
   }
+
   function wheel(level, id, state) {
-    // Compact floor dial centered on the intersection of the four pedestals.
-    const {x,y}=hubPoint(level,id);
-    const locked=G.Engine.isBlocked(level,id),linked=level.link&&level.link.slice(0,2).includes(id);
-    const rune=G.Engine.isRuneLocked(level,state,id), seal=(level.seals||[]).find(([w])=>w===id), one=(level.oneWay||[]).find(([w])=>w===id);
-    const clr=locked?'#8A9696':seal?'#8964b0':linked?'#C28C45':'#438F86',fill=locked?'#DFE1D7':rune?'#e7d8f6':seal?'#ddf4dc':linked?'#FFF0C6':'#D7F5E8';
-    const hint=seal?` · Ấn ${id+1}: cần ${ANIMALS[seal[2]].name} trên bệ đánh dấu`:one?` · Chỉ vuốt ${one[1]===1?'trái':'phải'}`:'';
-    return `<g class="wheel ${locked?'locked':''} ${linked?'linked':''} ${rune?'rune-locked':''}" data-wheel="${id}" role="group" ${locked?'aria-disabled="true"':'tabindex="0"'} aria-label="Mâm xoay ${id+1}${locked?' bị phong ấn':hint||': chọn rồi vuốt trái hoặc phải; hỗ trợ phím trái hoặc phải'}" aria-describedby="drag-instruction">
-      <title>${locked?'Vòng bị phong ấn':hint||'Chạm chọn cụm · Vuốt phải ↺ hoặc trái ↻ ở bất kỳ đâu trên bàn'}</title>
-      <ellipse cx="${x}" cy="${y+5}" rx="27" ry="17" fill="#38584f35" pointer-events="none"/>
-      <ellipse class="wheel-body" cx="${x}" cy="${y+3}" rx="26" ry="17" fill="${clr}" stroke="${clr}" stroke-width="2"/>
-      <ellipse cx="${x}" cy="${y}" rx="26" ry="17" fill="${fill}" stroke="${clr}" stroke-width="2"/>
-      <g class="wheel-rotor" data-rotor="${id}" transform="translate(${x} ${y}) scale(.62 .37)">
-        <g class="rotor-spokes" stroke="${clr}" stroke-width="6" stroke-linecap="round"><path d="M-29 0H29M0-29V29"/><path d="M-20-20L20 20M-20 20L20-20" stroke-width="3" opacity=".55"/></g>
-        <circle r="30" fill="none" stroke="${clr}" stroke-width="3"/>
-        <circle r="8" fill="#fff9df" stroke="${clr}" stroke-width="3"/>
-        <circle cy="-30" r="5" fill="#e8b856" stroke="#fff9df" stroke-width="2"/>
+    // OPTION 3: Floating Elevated Crystal Hubs
+    // Base coordinates on ground plane: (x, y)
+    // Elevated floating position in air: (x, cy) where cy = y - 24
+    const {x, y} = hubPoint(level, id);
+    const cy = y - 24; // Elevated above ground!
+    const locked = G.Engine.isBlocked(level, id);
+    const link = level.link && level.link.slice(0, 2).includes(id);
+    const isMirror = link && level.link[2] === 1;
+    const isCounter = link && level.link[2] === -1;
+    const rune = G.Engine.isRuneLocked(level, state, id), seal = (level.seals || []).find(([w]) => w === id);
+    const dual = G.Engine.isDualLocked(level, state, id), dualSeal = (level.dualSeals || []).find(([w]) => w === id);
+    const frost = G.Engine.isFrostLocked(level, state, id), frostSeal = (level.frost || []).find(([w]) => w === id);
+    const one = (level.oneWay || []).find(([w]) => w === id);
+
+    let clr = '#2c9384', fill = '#D7F5E8', gemClr = '#5eead4', edgeClr = '#115e59';
+    if (locked) { clr = '#788282'; fill = '#DFE1D7'; gemClr = '#9ca3af'; edgeClr = '#4b5563'; }
+    else if (frost) { clr = '#2563eb'; fill = '#dbeafe'; gemClr = '#93c5fd'; edgeClr = '#1d4ed8'; }
+    else if (dual) { clr = '#7c3aed'; fill = '#ede9fe'; gemClr = '#c4b5fd'; edgeClr = '#5b21b6'; }
+    else if (seal) { clr = '#8b5cf6'; fill = rune ? '#f3e8ff' : '#dcfce7'; gemClr = rune ? '#d8b4fe' : '#86efac'; edgeClr = '#6d28d9'; }
+    else if (isMirror) { clr = '#0891b2'; fill = '#cffafe'; gemClr = '#67e8f9'; edgeClr = '#0e7490'; }
+    else if (isCounter) { clr = '#d97706'; fill = '#fef3c7'; gemClr = '#fcd34d'; edgeClr = '#b45309'; }
+
+    let hint = '';
+    if (locked) hint = 'Vòng bị phong ấn cố định';
+    else if (frost) hint = ' · Đang đóng băng: cần Cáo sưởi ấm';
+    else if (dualSeal) hint = ' · Ấn kép: cần hai linh thú ở hai bệ kích hoạt';
+    else if (seal) hint = ` · Ấn ${id+1}: cần ${ANIMALS[seal[2]].name} trên bệ đánh dấu`;
+    else if (isMirror) hint = ' · Trục song sinh: xoay cùng chiều với trục liên kết';
+    else if (isCounter) hint = ' · Bánh răng: xoay ngược chiều với trục liên kết';
+    if (one) hint += ` · Chỉ vuốt ${one[1]===1?'trái ←':'phải →'}`;
+
+    return `<g class="wheel floating-crystal-hub ${locked?'locked':''} ${link?'linked':''} ${isMirror?'mirror':''} ${rune?'rune-locked':''} ${frost?'frost-locked':''} ${dual?'dual-locked':''}" data-wheel="${id}" role="group" ${locked?'aria-disabled="true"':'tabindex="0"'} aria-label="Trục pha lê nổi ${id+1}: chạm chọn rồi vuốt trái hoặc phải" aria-describedby="drag-instruction">
+      <title>${hint||'Trục pha lê nổi · Chạm ngã tư · Vuốt phải ↺ hoặc trái ↻'}</title>
+      
+      <!-- Ground Shadow underneath the floating crystal -->
+      <ellipse class="crystal-ground-shadow" cx="${x}" cy="${y+5}" rx="32" ry="19" fill="#1b362c38" pointer-events="none"/>
+      <!-- Ground Magic Rune Anchor -->
+      <ellipse class="crystal-ground-anchor" cx="${x}" cy="${y}" rx="40" ry="24" fill="none" stroke="${clr}" stroke-width="1.8" stroke-dasharray="4 5" opacity=".55" pointer-events="none"/>
+      
+      <!-- Vertical Levitation Energy Beam -->
+      <polygon class="crystal-beam" points="${x-18},${y} ${x+18},${y} ${x+26},${cy+8} ${x-26},${cy+8}" fill="${clr}" opacity=".16" pointer-events="none"/>
+      
+      <!-- FLOATING CRYSTAL DIAL (Elevated at cy = y - 24) -->
+      <g class="floating-gem-body" transform="translate(0 0)">
+        <!-- Luminous Beacon Ring around the elevated crystal -->
+        <ellipse class="hub-beacon floating" cx="${x}" cy="${cy}" rx="52" ry="34" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="5 6" opacity=".7"/>
+        
+        <!-- Crystal Base & Lower Facet Shadow -->
+        <ellipse class="wheel-body" cx="${x}" cy="${cy+6}" rx="36" ry="23" fill="${edgeClr}" stroke="${edgeClr}" stroke-width="2"/>
+        
+        <!-- Main Floating Crystal Surface -->
+        <ellipse class="wheel-face" cx="${x}" cy="${cy}" rx="36" ry="23" fill="${fill}" stroke="${clr}" stroke-width="3"/>
+        
+        <!-- Crystal Facet Prisms (Hexagonal Jewel Geometry) -->
+        <polygon points="${x-32},${cy} ${x-16},${cy-16} ${x+16},${cy-16} ${x+32},${cy} ${x+16},${cy+16} ${x-16},${cy+16}" fill="${gemClr}" opacity=".35" stroke="${clr}" stroke-width="1.2"/>
+        <path d="M${x-32} ${cy}L${x+32} ${cy}M${x-16} ${cy-16}L${x+16} ${cy+16}M${x+16} ${cy-16}L${x-16} ${cy+16}" stroke="#ffffff" stroke-width="1.5" opacity=".6"/>
+        
+        <!-- Rotating Core Rotor inside crystal -->
+        <g class="wheel-rotor" data-rotor="${id}" transform="translate(${x} ${cy}) scale(.78 .48)">
+          <g class="rotor-spokes" stroke="${clr}" stroke-width="6" stroke-linecap="round"><path d="M-30 0H30M0-30V30"/><path d="M-21-21L21 21M-21 21L21-21" stroke-width="3.5" opacity=".7"/></g>
+          <circle r="30" fill="none" stroke="${clr}" stroke-width="3.2"/>
+          <circle r="11" fill="#fffdf5" stroke="${clr}" stroke-width="3.5"/>
+          <circle cy="-30" r="5" fill="#f59e0b" stroke="#fffdf5" stroke-width="2"/>
+        </g>
+        
+        <!-- Radiant Central Gem Core -->
+        <circle cx="${x}" cy="${cy-1}" r="7.5" fill="#fbbf24" stroke="#ffffff" stroke-width="2.5" pointer-events="none"/>
+        <circle cx="${x-2}" cy="${cy-3}" r="2.2" fill="#ffffff" pointer-events="none"/>
+
+        <!-- Blocker Badges on the Floating Crystal -->
+        ${locked?`<text x="${x}" y="${cy+7}" font-size="22" text-anchor="middle" pointer-events="none">🔒</text>`:''}
+        ${isCounter?`<g pointer-events="none"><circle cx="${x+28}" cy="${cy-18}" r="11" fill="#E9B765" stroke="#fff2d5" stroke-width="2"/><text x="${x+28}" y="${cy-14}" font-size="13" text-anchor="middle" fill="#765123">⚙</text></g>`:''}
+        ${isMirror?`<g pointer-events="none"><circle cx="${x+28}" cy="${cy-18}" r="11" fill="#06b6d4" stroke="#ecfeff" stroke-width="2"/><text x="${x+28}" y="${cy-14}" font-size="13" text-anchor="middle" fill="#083344">🪞</text></g>`:''}
+        ${frost?`<g pointer-events="none"><circle cx="${x-28}" cy="${cy-18}" r="11" fill="#3b82f6" stroke="#eff6ff" stroke-width="2"/><text x="${x-28}" y="${cy-13}" font-size="13" text-anchor="middle" fill="#fff">❄</text></g>`:''}
+        ${dualSeal?`<g pointer-events="none"><circle cx="${x-28}" cy="${cy-18}" r="11" fill="#8b5cf6" stroke="#f5f3ff" stroke-width="2"/><text x="${x-28}" y="${cy-13}" font-size="13" text-anchor="middle" fill="#fff">☯</text></g>`:''}
+        ${seal?`<text class="rune-badge" x="${x-32}" y="${cy-19}" font-size="20" fill="#6d28d9" font-weight="bold" pointer-events="none">${'①②③④⑤⑥'[id]}${rune?'◇':'✓'}</text>`:''}
+        ${one?`<g class="one-way-badge" pointer-events="none"><rect x="${x-84}" y="${cy-40}" width="54" height="22" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="2.2"/><text x="${x-57}" y="${cy-24}" text-anchor="middle" font-size="13.5" font-weight="900" fill="#78350f">Chỉ ${one[1]===1?'←':'→'}</text></g>`:''}
       </g>
-      ${locked?`<text x="${x}" y="${y+6}" font-size="20" text-anchor="middle" pointer-events="none">🔒</text>`:''}
-      ${linked?`<circle cx="${x+23}" cy="${y-15}" r="9" fill="#E9B765" stroke="#fff2d5" stroke-width="2"/><text x="${x+23}" y="${y-11}" font-size="12" text-anchor="middle" fill="#765123" pointer-events="none">⚙</text>`:''}
-      ${one?`<g class="one-way-badge" pointer-events="none"><rect x="${x-75}" y="${y-35}" width="50" height="20" rx="9" fill="#fff1c6" stroke="#c79d45" stroke-width="2"/><text x="${x-50}" y="${y-20}" text-anchor="middle" font-size="13" fill="#76521d">Chỉ ${one[1]===1?'←':'→'}</text></g>`:''}
-      ${seal?`<text class="rune-badge" x="${x-28}" y="${y-17}" font-size="18" fill="#755097" pointer-events="none">${'①②③④⑤⑥'[id]}${rune?'◇':'✓'}</text>`:''}
-      <ellipse class="wheel-hit" cx="${x}" cy="${y}" rx="40" ry="30" fill="transparent"/>
+      
+      <!-- Generous interactive hit area covering both the elevated gem and ground -->
+      <ellipse class="wheel-hit" cx="${x}" cy="${cy}" rx="62" ry="46" fill="transparent"/>
     </g>`;
   }
+
   function wheelTrack(level, id) {
     const {x,y} = wheelPoint(level,id);
-    const locked = G.Engine.isBlocked(level,id), linked = level.link?.slice(0,2).includes(id);
-    const color = locked?'#89938b':linked?'#c28c45':'#438f86';
+    const locked = G.Engine.isBlocked(level,id);
+    const link = level.link?.slice(0,2).includes(id);
+    const isMirror = link && level.link[2] === 1;
+    const color = locked?'#89938b':isMirror?'#0891b2':link?'#d97706':'#2c9384';
     return `<g class="wheel-track" data-track="${id}" pointer-events="none" stroke="${color}" fill="none">
       <ellipse cx="${x}" cy="${y}" rx="102" ry="61" stroke-width="5"/>
       <ellipse cx="${x}" cy="${y}" rx="114" ry="69" stroke-width="2" stroke-dasharray="5 9"/>
       <g data-arms="${id}" transform="translate(${x} ${y}) scale(102 61)"><path d="M-1 0H1M0-1V1" stroke-width=".035"/><circle r=".18" fill="${color}" stroke-width=".04"/></g>
     </g>`;
   }
+
   function background(level) {
     const t=THEMES[level.theme];
     let out=`<defs>
@@ -154,6 +256,7 @@
     out+=`<g opacity=".52"><g transform="translate(108 390)"><path d="M0 0Q-42-65-22-95Q-9-73 0 0M0 0Q33-77 48-70Q51-40 0 0" fill="#5EAB84"/></g><g transform="translate(668 454)"><path d="M0 0Q-24-36-11-69Q8-44 0 0M0 0Q28-57 41-45Q39-20 0 0" fill="#5EAB84"/></g></g>`;
     return out;
   }
+
   function scene(level, state, hidden = null) {
     let svg = background(level);
     const indices=Array.from({length:state.length},(_,i)=>i);
@@ -169,15 +272,16 @@
     for(const i of indices){
       if(!hidden||!hidden.has(i)){
         const p=pointForIndex(level,i);
-        svg+=`<g data-cell="${i}" pointer-events="none"><ellipse class="animal-hit" cx="${p.x}" cy="${p.y-44}" rx="37" ry="42" fill="transparent" pointer-events="all"/>${animalAt(state[i],p.x,p.y)}</g>`;
+        svg+=`<g data-cell="${i}" pointer-events="none"><ellipse class="animal-hit" cx="${p.x}" cy="${p.y-44}" rx="32" ry="36" fill="transparent" pointer-events="all"/>${animalAt(state[i],p.x,p.y)}</g>`;
       }
     }
-    // Input stays reachable without painting anything over a face.
+    // High-priority large intersection touch targets sit above animals at elevated height (cy = y - 24)
     for(let w=0;w<G.Engine.wheelCount(level);w++) {
       const p=hubPoint(level,w);
-      svg+=`<g class="wheel-target" data-wheel="${w}" aria-hidden="true"><ellipse cx="${p.x}" cy="${p.y}" rx="40" ry="30" fill="transparent" pointer-events="all"/></g>`;
+      svg+=`<g class="wheel-target" data-wheel="${w}" aria-hidden="true"><ellipse cx="${p.x}" cy="${p.y-24}" rx="62" ry="46" fill="transparent" pointer-events="all"/></g>`;
     }
     return svg+'<g id="flying-sprites"></g>';
   }
+
   G.Art={ ANIMALS, THEMES, gridPoint, pointForIndex, wheelPoint, hubPoint, orbitPoint, animalShape, animalAt, scene };
 })(window.SpiritGrove);
