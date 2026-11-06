@@ -2,37 +2,35 @@
   "id": "paint-match",
   "title": "Paint Match",
   "category": "Puzzle",
-  "version": "0.1",
-  "description": "Tiệm tranh sắc màu: Ghép các bạn giọt sơn rực rỡ để bắn màu hoàn thiện các bức tranh pixel art dễ thương.",
+  "version": "0.4",
+  "description": "Tiệm tranh sắc màu: Nghệ nhân pha màu thực thụ (Color Alchemy) kết hợp nối 4 hướng, băng chuyền động và bộ sưu tập Bảo tàng Tranh đạt 3 sao.",
   "thumbnail": "./thumbnail.svg",
   "entry": "./index.html",
   "orientation": "portrait",
   "levelCount": 10,
   "rules": [
-    "Hoán đổi hai giọt sơn kề nhau (ngang hoặc dọc) để tạo thành chuỗi 3 ô trở lên cùng màu.",
-    "Mỗi chuỗi ghép được sẽ bắn những giọt sơn tương ứng lên bức tranh pixel phía trên.",
-    "Ghép 4 ô liên tiếp tạo ra 🖌️ Cọ vẽ, quét sạch toàn bộ một hàng ngang khi được kích hoạt.",
-    "Ghép 5 ô liên tiếp tạo ra 🪣 Xô sơn thần kỳ, khi hoán đổi sẽ xóa sạch mọi ô cùng màu trên bàn cờ.",
-    "Giải phóng các chướng ngại vật: phá vỡ 🪨 đá, bẻ khóa ⛓️ lồng nhốt và dọn sạch 🖤 quái vật mực loang bằng cách ghép các ô sát cạnh.",
-    "Tô kín toàn bộ các điểm ảnh trên tranh trước khi hết số lượt đi cho phép để giành chiến thắng."
+    "Nối các giọt sơn theo 4 hướng (ngang/dọc, tối thiểu 3 giọt).",
+    "🧪 NGHỆ NHÂN PHA MÀU (Color Alchemy): Nối dải chuyển màu để tự tạo màu thứ cấp! (Ví dụ: Đỏ + Vàng = Cam; Xanh + Vàng = Xanh lá; Đỏ + Xanh = Tím; Đỏ + Trắng = Hồng).",
+    "🔄 BĂNG CHUYỀN ĐỘNG (Conveyor Belts): Các hàng/cột có mũi tên sẽ tự động dịch chuyển 1 bước sau mỗi lượt đi.",
+    "⚡ Kích hoạt Siêu Bão Màu (Super Nova) khi tạo thành vòng lặp hình hộp khép kín 4 hướng.",
+    "⭐ Hoàn thành tranh với số lượt dư càng nhiều để đạt tối đa 3 sao và lưu vào Bảo tàng Tranh cá nhân!"
   ],
   "features": [
-    "10 bức tranh pixel nghệ thuật độc đáo: Trái tim, Nấm đỏ, Mèo cam, Thỏ trắng, Ếch xanh, Vịt vàng...",
-    "Cơ chế sơn tranh tương tác: Cho phép chạm trực tiếp vào ô tranh để ưu tiên bắn màu vào vị trí đó.",
-    "Hiệu ứng giọt sơn bay theo đường cong parabol và tia sáng lấp lánh khi chạm đích.",
-    "Hệ thống chướng ngại vật phong phú: Đá tảng, Lồng xích, Ô ẩn bí mật, Sơn 2 lớp (x2), Mực loang và Khóa tranh.",
-    "Hệ thống âm thanh sống động tổng hợp bằng Web Audio API, có chế độ bật/tắt tiện lợi.",
-    "Bảng chọn màn chơi nhanh trực quan, hỗ trợ chơi lại không giới hạn."
+    "Cơ chế Pha màu thực thụ (Color Alchemy): Đường nối đổi sắc Gradient tuyệt đẹp, cho phép pha chế màu sơn để vẽ các chi tiết phức tạp.",
+    "Khung giá vẽ tranh khổng lồ (272px x 272px) với từng điểm ảnh 32px nổi khối 3D thạch dẻo bóng láng.",
+    "🏛️ Bộ sưu tập Bảo tàng Tranh (Gallery Museum): Lưu trữ toàn bộ các tác phẩm đã vẽ, khung mạ vàng và hệ thống đánh giá 1-3 sao.",
+    "🔄 Trục lăn băng chuyền (Conveyor Belts) tạo tính động và thách thức dự đoán chiến thuật.",
+    "Thanh mục tiêu màu sắc (Color Goals Tracker) hiển thị số lượng giọt màu còn thiếu hoặc tích xanh hoàn thành.",
+    "Âm thanh pha màu ma thuật (Magic Alchemy Chime), đàn Kalimba ngũ âm và hiệu ứng pháo hoa Confetti."
   ],
   "controls": [
-    "Kéo vuốt hoặc chạm lần lượt 2 ô kề nhau để hoán đổi giọt sơn.",
-    "Chạm vào bất kỳ ô nào trên bức tranh pixel để đặt tiêu điểm bắn màu ưu tiên.",
-    "Bấm 'Màn ▾' hoặc '⭐ Chọn màn' để mở bảng chọn và nhảy tới bất kỳ màn chơi nào.",
-    "Bấm '↺ Chơi lại' để làm mới màn chơi hiện tại bất cứ lúc nào."
+    "Chạm và kéo vuốt liên tục qua các giọt sơn cùng màu hoặc cặp màu có thể pha chế (ngang/dọc).",
+    "Rút ngón tay lùi lại ô trước đó nếu muốn hủy bớt bước nối.",
+    "Bấm '🏛️' trên thanh công cụ để mở Bảo tàng Tranh và xem lại các tác phẩm đã hoàn thành.",
+    "Bấm 'Màn ▾' hoặc '⭐ Chọn màn' để mở bảng chọn và nhảy tới bất kỳ màn chơi nào."
   ],
   "notes": [
-    "Được cấu trúc module tách biệt hoàn toàn giữa Logic Engine, Renderer, Audio và Levels.",
-    "Bàn cờ tự động kiểm tra và xáo trộn kẹo thông minh nếu không còn bất kỳ nước đi nào."
+    "Tiến độ tranh và số sao đạt được được tự động lưu vào trình duyệt.",
+    "Bàn chơi tự động phát hiện và xáo trộn màu thông minh nếu không còn bất kỳ đường nối 3 giọt hợp lệ nào."
   ]
 }
-

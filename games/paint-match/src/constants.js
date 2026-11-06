@@ -1,6 +1,6 @@
 /**
  * Paint Match - Constants & Configuration
- * Định nghĩa bảng màu, kích thước bàn cờ, loại ô đặc biệt và chướng ngại vật.
+ * Định nghĩa bảng màu, công thức pha màu (Color Alchemy), băng chuyền động và layout.
  */
 
 (function (root, factory) {
@@ -13,25 +13,23 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  // Kích thước bàn cờ Match-3 (6x6) và Tranh Pixel (8x8)
   const BOARD_SIZE = 6;
   const PIX_SIZE = 8;
 
-  // Bảng mã màu các giọt sơn
+  // Bảng màu nước nghệ thuật
   const COLORS = {
-    P: '#ff8fb3', // Hồng thạch (Pink)
-    R: '#ff5d6c', // Đỏ dâu (Red)
-    O: '#ffa94d', // Cam đào (Orange)
-    Y: '#ffd93d', // Vàng chuối (Yellow)
-    G: '#6bd68b', // Xanh bơ (Green)
-    B: '#5ab8ff', // Xanh mây (Blue)
-    V: '#b388ff', // Tím hoa oải hương (Violet)
-    K: '#5b4a6e', // Tím than / mực đậm (Ink/Dark)
+    P: '#ff5c98', // Hồng thạch (Pink)
+    R: '#ff3d57', // Đỏ dâu (Red)
+    O: '#ff8522', // Cam đào (Orange)
+    Y: '#ffc814', // Vàng chuối (Yellow)
+    G: '#38cf70', // Xanh bơ (Green)
+    B: '#319cf0', // Xanh mây (Blue)
+    V: '#9154f8', // Tím hoa oải hương (Violet)
+    K: '#432f57', // Tím than / mực đậm (Ink/Dark)
     W: '#ffffff', // Trắng sữa (White)
-    N: '#b98560'  // Nâu bánh quy (Brown)
+    N: '#9e673f'  // Nâu bánh quy (Brown)
   };
 
-  // Tên thân thiện cho từng màu
   const COLOR_NAMES = {
     P: 'Hồng thạch',
     R: 'Đỏ dâu',
@@ -45,30 +43,54 @@
     N: 'Nâu quy'
   };
 
-  // Loại ô kỹ năng đặc biệt khi ghép 4 hoặc 5
-  const SPECIAL = {
-    NONE: '',
-    BRUSH: 'b',  // Cọ vẽ (quét sạch cả hàng)
-    BUCKET: 'k'  // Xô sơn (xóa sạch tất cả ô cùng màu)
+  /**
+   * BẢNG CÔNG THỨC PHA MÀU THỰC THỤ (COLOR ALCHEMY RECIPES)
+   * Cho phép người chơi nối chuyển từ màu này sang màu khác để tạo màu thứ cấp!
+   */
+  const COLOR_MIX_RECIPES = {
+    'R+Y': 'O', // Đỏ + Vàng = Cam đào
+    'Y+R': 'O',
+    'B+Y': 'G', // Xanh dương + Vàng = Xanh lá
+    'Y+B': 'G',
+    'R+B': 'V', // Đỏ + Xanh dương = Tím oải hương
+    'B+R': 'V',
+    'R+W': 'P', // Đỏ + Trắng = Hồng thạch
+    'W+R': 'P',
+    'O+K': 'N', // Cam + Mực than = Nâu bánh quy
+    'K+O': 'N',
+    'R+G': 'N', // Đỏ + Xanh lá = Nâu bánh quy
+    'G+R': 'N'
   };
 
-  // Loại chướng ngại vật trên bàn Match-3
+  function getMixResult(colorA, colorB) {
+    if (!colorA || !colorB || colorA === colorB) return null;
+    return COLOR_MIX_RECIPES[`${colorA}+${colorB}`] || null;
+  }
+
   const BLOCKER = {
     NONE: 0,
-    STONE: 1, // 🪨 Đá rắn chắc (vỡ khi ghép kề bên)
-    INK: 2    // 🖤 Quái vật mực (loang dần theo số lượt)
+    STONE: 1, // 🪨 Đá tảng
+    INK: 2    // 🖤 Quái vật mực loang
   };
 
-  // Tọa độ và kích thước khung vẽ trên Canvas logic (340x540)
+  // Tọa độ và kích thước khung vẽ Canvas logic (360 x 640 - Tỉ lệ 9:16 chuẩn di động)
   const LAYOUT = {
-    VIRTUAL_WIDTH: 340,
-    VIRTUAL_HEIGHT: 540,
-    BOARD_X: 20,
-    BOARD_Y: 222,
-    CELL_SIZE: 50,
-    PIX_X: 82,
-    PIX_Y: 20,
-    PIX_CELL_SIZE: 22
+    VIRTUAL_WIDTH: 360,
+    VIRTUAL_HEIGHT: 640,
+    
+    // Khung tranh giá vẽ khổng lồ (272px x 272px)
+    PIX_X: 44,
+    PIX_Y: 14,
+    PIX_CELL_SIZE: 34,
+    
+    // Thanh theo dõi mục tiêu màu sắc
+    GOALS_Y: 298,
+    GOALS_HEIGHT: 34,
+
+    // Bàn cờ Line Connect 4 hướng phía dưới (6x6)
+    BOARD_X: 48,
+    BOARD_Y: 348,
+    CELL_SIZE: 44
   };
 
   return {
@@ -76,9 +98,9 @@
     PIX_SIZE,
     COLORS,
     COLOR_NAMES,
-    SPECIAL,
+    COLOR_MIX_RECIPES,
+    getMixResult,
     BLOCKER,
     LAYOUT
   };
 });
-

@@ -1,6 +1,7 @@
 /**
- * Paint Match - Audio
- * Tổng hợp hiệu ứng âm thanh sống động bằng Web Audio API không cần tải file ngoài.
+ * Paint Match - Audio (Color Alchemy & Gallery Fanfare)
+ * Hiệu ứng âm thanh đàn Kalimba ngũ âm, âm thanh pha màu ma thuật (Color Alchemy),
+ * trục lăn băng chuyền và khúc nhạc khải hoàn 3 sao.
  */
 
 (function (root, factory) {
@@ -16,12 +17,9 @@
   let audioCtx = null;
   let isMuted = false;
 
-  // Đọc tùy chọn âm thanh từ localStorage
   try {
     isMuted = localStorage.getItem('paint-match-muted') === 'true';
-  } catch (e) {
-    // Không truy cập được storage
-  }
+  } catch (e) {}
 
   function getAudioContext() {
     if (!audioCtx) {
@@ -48,55 +46,133 @@
     return isMuted;
   }
 
-  // Âm thanh hoán đổi ô (Whoosh nhẹ)
-  function playSwap() {
+  const KALIMBA_PENTATONIC = [
+    261.63, 293.66, 329.63, 392.00, 440.00,
+    523.25, 587.33, 659.25, 783.99, 880.00,
+    1046.50, 1174.66, 1318.51
+  ];
+
+  function playConnectStep(stepIndex = 0) {
     if (isMuted) return;
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const now = ctx.currentTime;
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(480, now + 0.08);
-
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
-  }
-
-  // Âm thanh vỡ kẹo / nổ combo (cao dần theo chuỗi combo)
-  function playMatch(combo = 1) {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const baseFreq = 440 * Math.pow(1.12, Math.min(8, combo - 1));
+    const noteIdx = Math.min(KALIMBA_PENTATONIC.length - 1, stepIndex);
+    const freq = KALIMBA_PENTATONIC[noteIdx];
     const now = ctx.currentTime;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(baseFreq, now);
-    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.14);
+    osc.frequency.setValueAtTime(freq, now);
 
     gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.14);
+    osc.stop(now + 0.22);
   }
 
-  // Âm thanh giọt sơn rơi chạm vào tranh (Juicy paint splat)
+  // Âm thanh pha màu ma thuật khi nối chuyển màu (Magic Alchemy Chime)
+  function playColorMix() {
+    if (isMuted) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const notes = [659.25, 830.61, 987.77, 1318.51]; // E5, G#5, B5, E6
+    notes.forEach((freq, idx) => {
+      const now = ctx.currentTime + idx * 0.045;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    });
+  }
+
+  // Âm thanh trục lăn băng chuyền trượt 1 bước
+  function playConveyor() {
+    if (isMuted) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.08);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  }
+
+  // Âm thanh Siêu Bão Màu khi khép kín vòng tròn (Loop Detected)
+  function playLoopDetected() {
+    if (isMuted) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const chord = [523.25, 659.25, 783.99, 987.77, 1174.66];
+    chord.forEach((freq, idx) => {
+      const now = ctx.currentTime + idx * 0.04;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    });
+  }
+
+  // Âm thanh nổ dải nối
+  function playBlast(count = 3, isLoop = false, isMixed = false) {
+    if (isMuted) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = (isLoop || isMixed) ? 'triangle' : 'sine';
+    const startFreq = isLoop ? 680 : (isMixed ? 520 : 380);
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(startFreq * 1.8, now + 0.16);
+
+    gain.gain.setValueAtTime(isLoop ? 0.25 : 0.16, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
   function playSplat() {
     if (isMuted) return;
     const ctx = getAudioContext();
@@ -107,98 +183,55 @@
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(520, now);
-    osc.frequency.exponentialRampToValueAtTime(260, now + 0.1);
+    osc.frequency.setValueAtTime(620, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.11);
 
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.1);
-  }
-
-  // Âm thanh xuất hiện Cọ hoặc Xô (Magic sparkle)
-  function playSpecial() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const notes = [587.33, 739.99, 880, 1174.66]; // D5, F#5, A5, D6
-    notes.forEach((freq, idx) => {
-      const start = ctx.currentTime + idx * 0.04;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, start);
-
-      gain.gain.setValueAtTime(0.1, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.12);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + 0.12);
-    });
-  }
-
-  // Âm thanh vỡ đá hoặc bẻ khóa lồng nhốt
-  function playBreak() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(160, now);
-    osc.frequency.exponentialRampToValueAtTime(60, now + 0.12);
-
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    gain.gain.setValueAtTime(0.16, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.12);
+    osc.stop(now + 0.11);
   }
 
-  // Khúc nhạc mừng chiến thắng
-  function playWin() {
+  function playWin(stars = 3) {
     if (isMuted) return;
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    const melody = [523.25, 659.25, 783.99, 1046.5]; // C - E - G - C
-    melody.forEach((freq, idx) => {
-      const start = ctx.currentTime + idx * 0.12;
+    const melody = [
+      { f: 523.25, d: 0.12 },
+      { f: 659.25, d: 0.12 },
+      { f: 783.99, d: 0.12 },
+      { f: 1046.50, d: 0.4 }
+    ];
+
+    let t = ctx.currentTime;
+    melody.forEach(note => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.setValueAtTime(note.f, t);
 
-      gain.gain.setValueAtTime(0.2, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + note.d);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + 0.35);
+      osc.start(t);
+      osc.stop(t + note.d);
+      t += note.d * 0.85;
     });
   }
 
-  // Âm thanh khi hết lượt chơi
   function playLose() {
     if (isMuted) return;
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    const tones = [330, 311, 293, 277];
+    const tones = [330, 294, 262, 220];
     tones.forEach((freq, idx) => {
       const start = ctx.currentTime + idx * 0.14;
       const osc = ctx.createOscillator();
@@ -208,12 +241,12 @@
       osc.frequency.setValueAtTime(freq, start);
 
       gain.gain.setValueAtTime(0.1, start);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(start);
-      osc.stop(start + 0.25);
+      osc.stop(start + 0.22);
     });
   }
 
@@ -221,13 +254,13 @@
     getAudioContext,
     isMuted: isAudioMuted,
     toggleMute,
-    playSwap,
-    playMatch,
+    playConnectStep,
+    playColorMix,
+    playConveyor,
+    playLoopDetected,
+    playBlast,
     playSplat,
-    playSpecial,
-    playBreak,
     playWin,
     playLose
   };
 });
-

@@ -1,6 +1,6 @@
 /**
  * Paint Match - Levels Configuration
- * Chứa danh sách màn chơi, mẫu tranh pixel (8x8), số lượt đi, và chướng ngại vật tương ứng.
+ * Chứa danh sách 10 màn chơi, mẫu tranh pixel (8x8), số lượt đi, băng chuyền và chướng ngại vật.
  */
 
 (function (root, factory) {
@@ -13,19 +13,6 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  /**
-   * Cấu hình 10 màn chơi:
-   * - n: Tên màn / bức tranh
-   * - a: Mẫu pixel 8x8 (chuỗi ký tự, dấu '.' là trong suốt/trống)
-   * - m: Số lượt đi tối đa
-   * - stones: Vị trí các ô đá [chỉ số 0..35]
-   * - cages: Vị trí các ô bị lồng xích nhốt
-   * - ink: Chu kỳ loang mực (cứ N lượt lại sinh 1 ô mực)
-   * - lock: Tọa độ ô tranh bị khóa [[hàng, cột], ...]
-   * - dbl: Tọa độ ô tranh sơn 2 lớp [[hàng, cột], ...]
-   * - hid: Số ô ẩn trên bàn cờ (cần ghép kế bên để mở)
-   * - info: Hướng dẫn hoặc mẹo hiển thị ở màn này
-   */
   const RAW_LEVELS = [
     {
       n: 'Trái tim',
@@ -40,10 +27,10 @@
         '...PP...',
         '........'
       ],
-      m: 20,
+      m: 18,
       info: [
-        'Hoán đổi 2 ô kề nhau để ghép 3 ô cùng màu.',
-        'Màu ghép được sẽ bắn những giọt sơn tô vào bức tranh phía trên!'
+        '🎨 Nối giọt cùng màu theo 4 hướng (ngang/dọc, tối thiểu 3 giọt).',
+        '🧪 Pha màu: Nối dải Đỏ (R) sang Trắng (W) để tạo Hồng (P)!'
       ]
     },
     {
@@ -59,10 +46,10 @@
         '..WWWW..',
         '.GGGGGG.'
       ],
-      m: 22,
+      m: 20,
       info: [
-        'Ghép 4 ô: Tạo 🖌️ Cọ sơn, quét sạch cả hàng ngang.',
-        'Ghép 5 ô: Tạo 🪣 Xô sơn thần kỳ, xóa sạch mọi ô cùng màu!'
+        '🧪 Công thức pha màu: Xanh dương (B) + Vàng (Y) = Xanh lá (G)!',
+        '⚡ Tạo vòng khép kín (Square Loop) để kích hoạt Siêu Bão Màu!'
       ]
     },
     {
@@ -78,10 +65,11 @@
         '.OOOOOO.',
         '..OOOO..'
       ],
-      m: 26,
+      m: 22,
       stones: [13, 22],
       info: [
-        '🪨 Ô đá cứng cáp: Ghép các giọt màu kề sát cạnh đá để làm vỡ.'
+        '🧪 Công thức pha màu: Đỏ (R) + Vàng (Y) = Cam đào (O)!',
+        '🪨 Ô đá tảng: Nối dải màu sát cạnh đá để làm vỡ.'
       ]
     },
     {
@@ -97,11 +85,12 @@
         '.WWWWWW.',
         '..WWWW..'
       ],
-      m: 28,
+      m: 24,
       cages: [8, 21, 28],
+      conveyors: [{ row: 3, dir: 1 }], // Hàng 3 trượt sang phải 1 bước sau mỗi lượt
       info: [
-        '⛓️ Ô bị nhốt: Không thể di chuyển hay hoán đổi chỗ.',
-        'Ghép sát cạnh ô bị nhốt để phá khóa giải cứu!'
+        '🔄 Băng chuyền động: Hàng có mũi tên sẽ tự dịch chuyển sau mỗi lượt đi!',
+        '⛓️ Ô bị nhốt: Nối dải màu kề bên để bẻ khóa cứu kẹo ra ngoài.'
       ]
     },
     {
@@ -117,10 +106,10 @@
         '.GGGGGG.',
         '..GG.GG.'
       ],
-      m: 28,
+      m: 25,
       lock: [[4, 2], [4, 5]],
       info: [
-        '🔒 Ô tranh bị khóa: Hãy tô màu các ô kề bên để giải phóng khóa.',
+        '🔒 Ô tranh bị khóa: Hãy tô màu các ô kề bên để mở khóa.',
         'Mẹo: Chạm trực tiếp vào ô tranh để ưu tiên bắn màu vào vị trí đó!'
       ]
     },
@@ -137,10 +126,11 @@
         '.YWWWY..',
         '..YYY...'
       ],
-      m: 30,
+      m: 26,
       dbl: [[1, 3], [5, 2], [5, 3], [5, 4]],
       info: [
-        '🎨 Ô tranh sơn 2 lớp (x2): Cần bắn trúng 2 lần cùng màu mới hoàn thành!'
+        '🎨 Ô tranh sơn 2 lớp (x2): Cần bắn trúng 2 lần cùng màu mới hoàn thành!',
+        '🧪 Pha màu Cam (O): Nối dải Đỏ (R) + Vàng (Y).'
       ]
     },
     {
@@ -156,11 +146,12 @@
         '.GGGGGG.',
         '...GG...'
       ],
-      m: 30,
+      m: 26,
       ink: 5,
+      conveyors: [{ col: 2, dir: 1 }], // Cột 2 trượt xuống sau mỗi lượt
       info: [
-        '🖤 Mực đen quái vật: Cứ mỗi 5 lượt lại loang thêm 1 giọt mực!',
-        'Hãy ghép cạnh ô mực để dọn sạch nó trước khi lan rộng.'
+        '🖤 Quái vật mực loang: Cứ 5 lượt lại sinh thêm một giọt mực đen.',
+        '🔄 Băng chuyền cột: Các giọt trên cột 3 sẽ tự trôi xuống dưới!'
       ]
     },
     {
@@ -176,12 +167,12 @@
         '.WWKKWW.',
         '..WWWW..'
       ],
-      m: 32,
+      m: 28,
       hid: 5,
       stones: [14, 21],
       cages: [7, 28],
       info: [
-        '❓ Ô ẩn bí mật: Hiện nguyên hình khi ghép sát bên cạnh.',
+        '❓ Ô ẩn bí mật: Hiện màu khi nối dải kề bên.',
         'Thử thách kết hợp cả 🪨 Đá và ⛓️ Lồng nhốt!'
       ]
     },
@@ -198,13 +189,17 @@
         '...YY...',
         '...OO...'
       ],
-      m: 34,
+      m: 30,
       stones: [8, 27],
       ink: 6,
       lock: [[2, 2], [2, 5]],
       dbl: [[2, 3], [2, 4]],
+      conveyors: [
+        { row: 1, dir: 1 },
+        { row: 4, dir: -1 }
+      ],
       info: [
-        'Thử thách tốc độ cao: Khóa ô, sơn 2 lớp, quái vật mực và đá cản đường!'
+        '🔄 Băng chuyền kép đối xứng! Khóa ô, sơn 2 lớp, mực và đá cản đường.'
       ]
     },
     {
@@ -220,28 +215,26 @@
         '..NWNW..',
         '..NNNN..'
       ],
-      m: 40,
+      m: 32,
       stones: [12, 23],
       cages: [9, 26],
       hid: 4,
       ink: 6,
       lock: [[1, 3], [2, 4]],
       dbl: [[0, 3], [0, 4]],
+      conveyors: [{ row: 2, dir: 1 }],
       info: [
-        'Đại tiệc tiệm bánh: Tổng hợp mọi chướng ngại vật đỉnh cao!'
+        'Đại tiệc tiệm bánh: Tổng hợp mọi công thức pha màu và chướng ngại vật!'
       ]
     }
   ];
 
-  // Tiền xử lý các màu xuất hiện trên bàn cờ cho mỗi màn chơi
   const DEFAULT_EXTRA_COLORS = ['B', 'V', 'G', 'Y', 'O', 'P'];
   const LEVELS = RAW_LEVELS.map(level => {
     const clone = { ...level };
-    // Lấy tập hợp màu thực tế có trong bức tranh
     const pictureColors = [...new Set(clone.a.join('').replace(/\./g, ''))];
     clone.cols = [...pictureColors];
 
-    // Đảm bảo có ít nhất 4 màu trên bàn cờ để trò chơi thú vị và có thể tạo match
     for (const color of DEFAULT_EXTRA_COLORS) {
       if (clone.cols.length >= 4) break;
       if (!clone.cols.includes(color)) clone.cols.push(color);
@@ -255,4 +248,3 @@
     count: () => LEVELS.length
   };
 });
-

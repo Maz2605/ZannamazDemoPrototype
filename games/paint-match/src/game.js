@@ -1,7 +1,7 @@
 /**
- * Paint Match - Game Controller
- * Kết nối giao diện người dùng, điều khiển sự kiện chuột/chạm cảm ứng,
- * âm thanh và vòng lặp đồ họa animation loop.
+ * Paint Match - Game Controller (Color Alchemy & Gallery Museum Integration)
+ * Điều phối cử chỉ ngón tay nối pha màu, quản lý bộ sưu tập Bảo tàng Tranh (Gallery)
+ * và lưu trữ số sao đạt được vào localStorage.
  */
 
 (function () {
@@ -19,6 +19,7 @@
   const prevBtn = $('prev');
   const nextBtn = $('next');
   const soundBtn = $('sound-btn');
+  const galleryBtn = $('gallery-btn');
   const lvlPickerBtn = $('lvl-picker-btn');
   const selectLvlBtn = $('select-lvl-btn');
   const resetBtn = $('reset');
@@ -37,20 +38,49 @@
   const lvlGrid = $('lvl-grid');
   const closeLvlModalBtn = $('close-lvl-modal');
 
-  // Trạng thái điều khiển
+  const galleryModal = $('gallery-modal');
+  const galleryGrid = $('gallery-grid');
+  const closeGalleryBtn = $('close-gallery');
+  const totalStarsEl = $('total-stars');
+
+  // Trạng thái game
   let currentLevel = 0;
   let G = null;
   let renderer = null;
-  let selectedCell = -1;
-  let pointerStart = null;
-  let actionLockUntil = 0;
   let gameTime = 0;
   let hasShownEndModal = false;
   let lastTimestamp = performance.now();
 
-  /**
-   * Chuyển đổi tọa độ pointer màn hình sang tọa độ logic canvas (340x540)
-   */
+  // Trạng thái đường vuốt nối
+  let activePath = [];
+  let isLoop = false;
+  let pointerPos = null;
+  let isDragging = false;
+  let currentAnalysis = null;
+
+  // Dữ liệu Bảo tàng Tranh lưu trong localStorage
+  const STORAGE_KEY = 'paint-match-gallery-v2';
+  function getGalleryData() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveGalleryData(levelIdx, stars, movesLeft) {
+    try {
+      const data = getGalleryData();
+      const existing = data[levelIdx] || { stars: 0, bestMoves: 0 };
+      data[levelIdx] = {
+        stars: Math.max(existing.stars, stars),
+        bestMoves: Math.max(existing.bestMoves, movesLeft),
+        completedAt: new Date().toLocaleDateString('vi-VN')
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
   function getCanvasLogicalPos(event) {
     const rect = cv.getBoundingClientRect();
     return {
@@ -59,9 +89,6 @@
     };
   }
 
-  /**
-   * Xác định ô trên bàn cờ Match-3 từ tọa độ logic
-   */
   function getCellAtPos(pos) {
     const col = Math.floor((pos.x - LAYOUT.BOARD_X) / LAYOUT.CELL_SIZE);
     const row = Math.floor((pos.y - LAYOUT.BOARD_Y) / LAYOUT.CELL_SIZE);
@@ -71,43 +98,30 @@
     return -1;
   }
 
-  /**
-   * Cập nhật thông báo nổi ngắn
-   */
   function showToast(text) {
     msgEl.textContent = text;
   }
 
-  /**
-   * Cập nhật HUD
-   */
   function updateHUD() {
     lvlSpan.textContent = `${currentLevel + 1}/${Levels.count()}`;
     prevBtn.disabled = currentLevel === 0;
     nextBtn.disabled = currentLevel === Levels.count() - 1;
 
-    // Cập nhật hướng dẫn màn
     chipsEl.innerHTML = G.level.info.map(t => `<div class="chip-item">${t}</div>`).join('');
 
-    // Số lượt đi
     mvEl.textContent = `👆 ${G.moves}`;
 
-    // Thanh tiến độ hoàn thành tranh
     const completedCount = G.totalPixels - G.left;
     const percent = Math.min(100, Math.round((completedCount / G.totalPixels) * 100));
     pfEl.style.width = `${percent}%`;
     pfEl.setAttribute('aria-valuenow', percent);
 
-    // Cập nhật nút âm thanh
     if (soundBtn) {
       soundBtn.textContent = Audio.isMuted() ? '🔇' : '🔊';
       soundBtn.setAttribute('title', Audio.isMuted() ? 'Bật âm thanh' : 'Tắt âm thanh');
     }
   }
 
-  /**
-   * Hiển thị bảng kết thúc (thắng / thua)
-   */
   function showOverlay(title, description, buttons) {
     ovTitle.textContent = title;
     ovDesc.textContent = description;
@@ -131,19 +145,23 @@
     ovModal.classList.remove('on');
   }
 
-  /**
-   * Mở modal chọn màn chơi
-   */
+  // BẢNG CHỌN MÀN CHƠI
   function openLevelModal() {
     lvlGrid.innerHTML = '';
+    const gallery = getGalleryData();
+
     for (let i = 0; i < Levels.count(); i++) {
       const lvl = Levels.get(i);
+      const lvlRecord = gallery[i];
+      const stars = lvlRecord ? '⭐'.repeat(lvlRecord.stars) : '';
+
       const btn = document.createElement('button');
       btn.className = `lvl-card ${i === currentLevel ? 'active' : ''}`;
       btn.innerHTML = `
         <span class="lvl-icon">${lvl.icon || '🎨'}</span>
         <span class="lvl-num">Màn ${i + 1}</span>
         <span class="lvl-name">${lvl.n}</span>
+        <span class="lvl-stars">${stars || '⚪⚪⚪'}</span>
       `;
       btn.onclick = () => {
         closeLevelModal();
@@ -158,14 +176,63 @@
     lvlModal.classList.remove('on');
   }
 
-  /**
-   * Bắt đầu một màn chơi
-   */
+  // BẢO TÀNG TRANH (GALLERY MUSEUM)
+  function openGalleryModal() {
+    galleryGrid.innerHTML = '';
+    const gallery = getGalleryData();
+    let totalStars = 0;
+
+    for (let i = 0; i < Levels.count(); i++) {
+      const lvl = Levels.get(i);
+      const record = gallery[i];
+      const isCompleted = !!record;
+      const starsCount = record ? record.stars : 0;
+      totalStars += starsCount;
+
+      const card = document.createElement('div');
+      card.className = `gallery-card ${isCompleted ? 'completed' : 'locked'}`;
+
+      if (isCompleted) {
+        card.innerHTML = `
+          <div class="gallery-frame">
+            <span class="gallery-icon">${lvl.icon || '🎨'}</span>
+            <div class="gallery-stars">${'⭐'.repeat(starsCount)}</div>
+          </div>
+          <h4 class="gallery-title">${lvl.n}</h4>
+          <span class="gallery-badge">Dư ${record.bestMoves} lượt</span>
+          <button class="gallery-play-btn" type="button">Vẽ lại ↺</button>
+        `;
+        card.querySelector('.gallery-play-btn').onclick = () => {
+          closeGalleryModal();
+          startLevel(i);
+        };
+      } else {
+        card.innerHTML = `
+          <div class="gallery-frame locked-frame">
+            <span class="lock-icon">🔒</span>
+          </div>
+          <h4 class="gallery-title">Tác phẩm ${i + 1}</h4>
+          <span class="gallery-badge">Chưa mở khóa</span>
+        `;
+      }
+      galleryGrid.appendChild(card);
+    }
+
+    if (totalStarsEl) {
+      totalStarsEl.textContent = `⭐ ${totalStars} / ${Levels.count() * 3}`;
+    }
+
+    galleryModal.classList.add('on');
+  }
+
+  function closeGalleryModal() {
+    galleryModal.classList.remove('on');
+  }
+
   function startLevel(levelIndex) {
     currentLevel = levelIndex;
     G = Engine.createGame(levelIndex, Levels);
 
-    // Đồng bộ tọa độ hạt ban đầu
     G.grid.forEach((cell, idx) => {
       if (cell) {
         const pt = Renderer.getBoardCellCenter(idx);
@@ -174,9 +241,11 @@
       }
     });
 
-    selectedCell = -1;
-    pointerStart = null;
-    actionLockUntil = 0;
+    activePath = [];
+    isLoop = false;
+    pointerPos = null;
+    isDragging = false;
+    currentAnalysis = null;
     hasShownEndModal = false;
 
     if (renderer) {
@@ -185,113 +254,150 @@
 
     hideOverlay();
     closeLevelModal();
-    showToast('');
+    closeGalleryModal();
+    showToast('Nối 4 hướng cùng màu hoặc pha màu (tối thiểu 3 giọt)!');
     updateHUD();
   }
 
-  /**
-   * Xử lý hành động hoán đổi 2 ô
-   */
-  function performSwap(a, b) {
-    if (gameTime < actionLockUntil || G.state !== 'play') return;
-
-    Audio.playSwap();
-    const wasReshuffled = G.reshuffled;
-    G.reshuffled = false;
-
-    const success = Engine.swap(G, a, b);
-    if (success) {
-      actionLockUntil = gameTime + 0.45;
-      selectedCell = -1;
-
-      Audio.playMatch(1);
-      Audio.playSplat();
-
-      if (G.reshuffled) {
-        showToast('Bàn cờ đã được tự động xáo lại vì hết nước đi!');
-      } else {
-        showToast('');
-      }
-    } else {
-      showToast('Nước đi này chưa ghép được 3 ô cùng màu!');
-      selectedCell = -1;
-    }
-
-    updateHUD();
-  }
-
-  // Gắn sự kiện cảm ứng / chuột trên canvas
+  // =========================================================
+  // XỬ LÝ CỬ CHỈ NGÓN TAY NỐI & PHA MÀU (COLOR ALCHEMY DRAG)
+  // =========================================================
   cv.addEventListener('pointerdown', e => {
     const pos = getCanvasLogicalPos(e);
 
-    // Chạm vào khung tranh pixel phía trên để đặt trọng tâm bắn màu
-    if (pos.y < LAYOUT.BOARD_Y - 10) {
+    // 1. Chạm vào khung tranh pixel để chọn trọng tâm
+    if (pos.y < LAYOUT.GOALS_Y - 8) {
       const col = Math.floor((pos.x - LAYOUT.PIX_X) / LAYOUT.PIX_CELL_SIZE);
       const row = Math.floor((pos.y - LAYOUT.PIX_Y) / LAYOUT.PIX_CELL_SIZE);
       if (col >= 0 && col < PX && row >= 0 && row < PX) {
         const pixelIndex = row * PX + col;
         const changed = Engine.setFocus(G, pixelIndex);
         if (changed) {
-          Audio.playSwap();
-          showToast(`Đã chọn trọng tâm: (${col + 1}, ${row + 1})`);
+          Audio.playConnectStep(0);
+          showToast(`Trọng tâm sơn: (${col + 1}, ${row + 1})`);
         }
       }
       return;
     }
 
-    // Chạm vào bàn cờ Match-3
-    cv.setPointerCapture(e.pointerId);
+    // 2. Chạm vào bàn cờ Line Connect
+    if (G.state !== 'play') return;
+
     const cellIndex = getCellAtPos(pos);
-    pointerStart = {
-      index: cellIndex,
-      pos
-    };
+    if (cellIndex >= 0 && Engine.isConnectable(G.grid[cellIndex])) {
+      cv.setPointerCapture(e.pointerId);
+      isDragging = true;
+      activePath = [cellIndex];
+      isLoop = false;
+      pointerPos = pos;
+      currentAnalysis = Engine.analyzePath(G, activePath);
+
+      Audio.playConnectStep(0);
+      showToast('Nối thêm 2 giọt nữa (ngang/dọc hoặc pha màu)...');
+    }
   });
 
-  cv.addEventListener('pointerup', e => {
-    if (!pointerStart) return;
+  cv.addEventListener('pointermove', e => {
+    if (!isDragging || activePath.length === 0) return;
 
-    const currentPos = getCanvasLogicalPos(e);
-    const start = pointerStart;
-    pointerStart = null;
+    const pos = getCanvasLogicalPos(e);
+    pointerPos = pos;
 
-    if (start.index < 0) return;
+    const cellIndex = getCellAtPos(pos);
+    if (cellIndex < 0) return;
 
-    const dx = currentPos.x - start.pos.x;
-    const dy = currentPos.y - start.pos.y;
-    const distance = Math.hypot(dx, dy);
+    const lastIndex = activePath[activePath.length - 1];
+    if (cellIndex === lastIndex) return;
 
-    // Nếu người chơi vuốt một đoạn đủ dài (> 18px): Thực hiện hoán đổi theo hướng vuốt
-    if (distance > 18) {
-      const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      const targetIndex = isHorizontal
-        ? start.index + Math.sign(dx)
-        : start.index + N * Math.sign(dy);
-
-      if (targetIndex >= 0 && targetIndex < N * N && Engine.isAdjacent(start.index, targetIndex, N)) {
-        performSwap(start.index, targetIndex);
-      }
+    // 1. Rút lùi ngón tay (Backtracking)
+    if (activePath.length >= 2 && cellIndex === activePath[activePath.length - 2]) {
+      activePath.pop();
+      const uniqueCount = new Set(activePath).size;
+      isLoop = uniqueCount < activePath.length;
+      currentAnalysis = Engine.analyzePath(G, activePath);
+      Audio.playConnectStep(activePath.length - 1);
+      showToast(activePath.length >= 3 ? `Chuỗi: ${activePath.length} giọt` : 'Cần thêm giọt nữa (tối thiểu 3)...');
       return;
     }
 
-    // Nếu người chơi chạm / nhấp từng ô liên tiếp
-    if (selectedCell >= 0 && selectedCell !== start.index && Engine.isAdjacent(selectedCell, start.index, N)) {
-      performSwap(selectedCell, start.index);
-    } else {
-      const clickedCell = G.grid[start.index];
-      // Nếu bấm lại chính ô đó hoặc bấm vào ô đá thì bỏ chọn
-      if (selectedCell === start.index || (clickedCell && clickedCell.st)) {
-        selectedCell = -1;
-      } else {
-        selectedCell = start.index;
-        Audio.playSwap();
+    // 2. Nối tiếp ô mới theo 4 HƯỚNG
+    const targetCell = G.grid[cellIndex];
+    if (targetCell && Engine.isConnectable(targetCell) && Engine.isAdjacent(lastIndex, cellIndex, N)) {
+      // Thử phân tích nếu thêm ô này vào đường nối
+      const testPath = [...activePath, cellIndex];
+      const testAnalysis = Engine.analyzePath(G, testPath);
+
+      // Cho phép nối nếu cùng màu HOẶC là pha màu hợp lệ
+      if (testAnalysis.isValid || testPath.length < 3) {
+        const isMixingStep = targetCell.c !== G.grid[lastIndex].c;
+
+        if (activePath.includes(cellIndex)) {
+          if (!isLoop) {
+            isLoop = true;
+            activePath.push(cellIndex);
+            currentAnalysis = Engine.analyzePath(G, activePath);
+            Audio.playLoopDetected();
+            showToast('⚡ SIÊU BÃO MÀU! Xóa sạch trên toàn bàn cờ!');
+          }
+        } else {
+          activePath.push(cellIndex);
+          currentAnalysis = testAnalysis;
+
+          if (isMixingStep && testAnalysis.isMixed) {
+            Audio.playColorMix();
+            showToast(`🧪 ĐANG PHA MÀU: ${Constants.COLOR_NAMES[testAnalysis.outputColor] || testAnalysis.outputColor}! ✨`);
+          } else {
+            Audio.playConnectStep(activePath.length - 1);
+            if (activePath.length < 3) {
+              showToast(`Cần thêm 1 giọt nữa (${activePath.length}/3)...`);
+            } else {
+              showToast(`Chuỗi: ${activePath.length} giọt kẹo!`);
+            }
+          }
+        }
       }
     }
   });
 
-  cv.addEventListener('pointercancel', () => {
-    pointerStart = null;
-  });
+  function finishConnection() {
+    if (!isDragging) return;
+    isDragging = false;
+    pointerPos = null;
+
+    if (activePath.length >= 3) {
+      const result = Engine.executeConnect(G, activePath, isLoop);
+      if (result && result.success) {
+        Audio.playBlast(activePath.length, isLoop, result.isMixed);
+
+        // Kêu âm thanh nếu có băng chuyền
+        if (G.conveyors && G.conveyors.length > 0) {
+          setTimeout(() => Audio.playConveyor(), 200);
+        }
+
+        if (result.isWasteColor) {
+          showToast(`⚠️ Màu ${Constants.COLOR_NAMES[result.outputColor]} tranh đã tô xong!`);
+        } else if (result.isMixed) {
+          showToast(`🧪 PHA MÀU THÀNH CÔNG: Bắn sơn ${Constants.COLOR_NAMES[result.outputColor]} lên tranh! ✨`);
+        } else if (isLoop) {
+          showToast('⚡ SIÊU BÃO MÀU! Cơn mưa sơn bay lên tranh!');
+        } else {
+          showToast(`Đã nối thành công ${activePath.length} giọt sơn!`);
+        }
+      }
+    } else {
+      if (activePath.length > 0) {
+        showToast('⚠️ Cần ít nhất 3 giọt cùng màu hoặc pha màu hợp lệ!');
+      }
+    }
+
+    activePath = [];
+    isLoop = false;
+    currentAnalysis = null;
+    updateHUD();
+  }
+
+  cv.addEventListener('pointerup', finishConnection);
+  cv.addEventListener('pointercancel', finishConnection);
 
   // UI Event Listeners
   resetBtn.addEventListener('click', () => {
@@ -310,14 +416,24 @@
   selectLvlBtn.addEventListener('click', openLevelModal);
   closeLvlModalBtn.addEventListener('click', closeLevelModal);
 
+  if (galleryBtn) {
+    galleryBtn.addEventListener('click', openGalleryModal);
+  }
+  if (closeGalleryBtn) {
+    closeGalleryBtn.addEventListener('click', closeGalleryModal);
+  }
+
   soundBtn.addEventListener('click', () => {
     Audio.toggleMute();
     updateHUD();
   });
 
-  // Đóng modal khi bấm vào vùng nền đen
   lvlModal.addEventListener('click', e => {
     if (e.target === lvlModal) closeLevelModal();
+  });
+
+  galleryModal.addEventListener('click', e => {
+    if (e.target === galleryModal) closeGalleryModal();
   });
 
   /**
@@ -329,21 +445,27 @@
     gameTime += dt;
 
     if (G && renderer) {
+      const goals = Engine.getGoals(G);
       renderer.update(dt, G);
-      renderer.render(G, selectedCell);
+      renderer.render(G, activePath, isLoop, pointerPos, goals, currentAnalysis);
 
-      // Cập nhật trạng thái thắng/thua khi hết hạt bay
       if (G.state !== 'play' && !hasShownEndModal && !renderer.hasActiveFlyingParticles()) {
         hasShownEndModal = true;
         setTimeout(() => {
           if (G.state === 'won') {
-            Audio.playWin();
+            const stars = G.stars || Engine.calculateStars(G);
+            saveGalleryData(currentLevel, stars, G.moves);
+            Audio.playWin(stars);
+
+            const starSymbols = '⭐'.repeat(stars) + '⚪'.repeat(3 - stars);
             const isLastLevel = currentLevel >= Levels.count() - 1;
+
             showOverlay(
-              'Bức tranh hoàn thành! 🎉',
-              `Bạn đã tô màu tuyệt đẹp cho "${G.level.n}". Còn dư ${G.moves} lượt đi.`,
+              `Bức tranh hoàn thành! 🎉\n${starSymbols}`,
+              `Bạn đã tô màu xuất sắc cho "${G.level.n}". Còn dư ${G.moves} lượt đi. Tác phẩm đã được lưu vào Bảo tàng tranh!`,
               [
                 ['Chơi lại màn này', () => startLevel(currentLevel), false],
+                ['🏛️ Xem Bảo tàng Tranh', openGalleryModal, false],
                 isLastLevel
                   ? ['Về màn 1 ↺', () => startLevel(0), true]
                   : ['Màn tiếp theo ➔', () => startLevel(currentLevel + 1), true]
@@ -353,20 +475,18 @@
             Audio.playLose();
             showOverlay(
               'Hết lượt đi rồi!',
-              `Bức tranh "${G.level.n}" còn thiếu ${G.left} ô màu chưa hoàn thành. Cố gắng thêm nhé!`,
+              `Bức tranh "${G.level.n}" còn thiếu ${G.left} ô màu chưa hoàn thành. Hãy tính toán công thức pha màu và hướng đi nhé!`,
               [['Thử lại ngay', () => startLevel(currentLevel), true]]
             );
           }
-        }, 500);
+        }, 600);
       }
     }
 
     requestAnimationFrame(gameLoop);
   }
 
-  // Khởi động game
   renderer = Renderer.createRenderer(cv);
   startLevel(0);
   requestAnimationFrame(gameLoop);
 })();
-

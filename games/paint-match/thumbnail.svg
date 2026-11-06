@@ -2,9 +2,16 @@
   <defs>
     <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe4f0" />
-      <stop offset="50%" stop-color="#ebd9fc" />
-      <stop offset="100%" stop-color="#d6f0ff" />
+      <stop offset="0%" stop-color="#ffe6f3" />
+      <stop offset="50%" stop-color="#edd9fc" />
+      <stop offset="100%" stop-color="#daf0ff" />
+    </linearGradient>
+
+    <!-- Glowing Line Gradient -->
+    <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff4d8d" />
+      <stop offset="50%" stop-color="#ffd700" />
+      <stop offset="100%" stop-color="#42a5f5" />
     </linearGradient>
 
     <!-- Card Shadow -->
@@ -14,129 +21,127 @@
     <filter id="tileShadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.12" />
     </filter>
+    <filter id="glowEffect" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
 
   <!-- Nền chính -->
   <rect width="400" height="300" rx="24" fill="url(#bgGrad)" />
 
-  <!-- Khung tranh Pixel Art thu nhỏ -->
-  <g transform="translate(130, 24)" filter="url(#softShadow)">
-    <rect width="140" height="110" rx="16" fill="#ffffff" stroke="#ffb3d1" stroke-width="3" />
+  <!-- Khung tranh mỹ thuật phóng to (Easel Canvas) -->
+  <g transform="translate(105, 16)" filter="url(#softShadow)">
+    <rect width="190" height="130" rx="18" fill="#ffffff" stroke="#ffb3d1" stroke-width="3.5" />
     
-    <!-- Mini Pixel Heart (8x8) -->
-    <g transform="translate(30, 15)">
+    <!-- Mini Pixel Heart (8x8) phóng to sắc nét -->
+    <g transform="translate(47, 18)">
       <!-- Row 1 -->
-      <rect x="10" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="20" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="50" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="60" y="0" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="12" y="0" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="24" y="0" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="60" y="0" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="72" y="0" width="12" height="12" rx="3" fill="#ff6ea7" />
       
       <!-- Row 2 -->
-      <rect x="0" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="10" y="10" width="10" height="10" rx="2" fill="#ffffff" stroke="#ff8fb3" stroke-width="1" />
-      <rect x="20" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="30" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="40" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="50" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="60" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="70" y="10" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="0" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="12" y="12" width="12" height="12" rx="3" fill="#ffffff" stroke="#ff6ea7" stroke-width="1.5" />
+      <rect x="24" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="36" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="48" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="60" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="72" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="84" y="12" width="12" height="12" rx="3" fill="#ff6ea7" />
 
       <!-- Row 3 -->
-      <rect x="0" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="10" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="20" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="30" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="40" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="50" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="60" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="70" y="20" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="0" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="12" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="24" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="36" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="48" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="60" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="72" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="84" y="24" width="12" height="12" rx="3" fill="#ff6ea7" />
 
       <!-- Row 4 -->
-      <rect x="10" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="20" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="30" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="40" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="50" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="60" y="30" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="12" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="24" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="36" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="48" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="60" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="72" y="36" width="12" height="12" rx="3" fill="#ff6ea7" />
 
       <!-- Row 5 -->
-      <rect x="20" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="30" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="40" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="50" y="40" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="24" y="48" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="36" y="48" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="48" y="48" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="60" y="48" width="12" height="12" rx="3" fill="#ff6ea7" />
 
       <!-- Row 6 -->
-      <rect x="30" y="50" width="10" height="10" rx="2" fill="#ff8fb3" />
-      <rect x="40" y="50" width="10" height="10" rx="2" fill="#ff8fb3" />
+      <rect x="36" y="60" width="12" height="12" rx="3" fill="#ff6ea7" />
+      <rect x="48" y="60" width="12" height="12" rx="3" fill="#ff6ea7" />
     </g>
 
-    <text x="70" y="98" font-family="'Segoe UI', system-ui, sans-serif" font-weight="800" font-size="11" fill="#8c7aa8" text-anchor="middle">PIXEL ART CANVAS</text>
+    <text x="95" y="116" font-family="'Segoe UI', system-ui, sans-serif" font-weight="800" font-size="11" fill="#ff6ea7" text-anchor="middle">🎨 EASEL CANVAS (240px)</text>
   </g>
 
-  <!-- Giọt sơn bay lượn trên đường cong -->
-  <path d="M 120 180 Q 150 110 200 110" fill="none" stroke="#ff8fb3" stroke-width="3" stroke-dasharray="4,4" />
-  <circle cx="160" cy="130" r="7" fill="#ff8fb3" filter="url(#tileShadow)" />
-  <circle cx="185" cy="115" r="5" fill="#ff8fb3" />
+  <!-- Vệt sao băng với đuôi dài uốn lượn -->
+  <path d="M 110 200 Q 140 120 200 110" fill="none" stroke="#ff4d8d" stroke-width="4" stroke-dasharray="6,4" opacity="0.8" />
+  <circle cx="160" cy="135" r="8" fill="#ff4d8d" filter="url(#glowEffect)" />
+  <circle cx="188" cy="118" r="6" fill="#ffffff" />
 
-  <!-- Bàn cờ kẹo Match-3 bên dưới -->
-  <g transform="translate(60, 160)" filter="url(#softShadow)">
-    <rect width="280" height="110" rx="20" fill="#ffffffcc" stroke="#e6dcf0" stroke-width="2" />
-    
-    <!-- 4 Bạn Giọt Sơn Đáng Yêu -->
-    <!-- Giọt Hồng (Pink) -->
-    <g transform="translate(42, 50)" filter="url(#tileShadow)">
-      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#ff8fb3" stroke="#00000018" stroke-width="2" />
-      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
-      <!-- Mắt & Miệng -->
-      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
-      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
-      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
-      <ellipse cx="-13" cy="5" rx="3.5" ry="2" fill="#ff6b9a55" />
-      <ellipse cx="13" cy="5" rx="3.5" ry="2" fill="#ff6b9a55" />
+  <!-- Bàn chơi Line Connect bên dưới -->
+  <g transform="translate(50, 165)" filter="url(#softShadow)">
+    <rect width="300" height="110" rx="20" fill="#ffffffea" stroke="#ebdcf8" stroke-width="2" />
+
+    <!-- Đường vẽ nối dạ quang (Line Connect Glow) qua 4 ô -->
+    <path d="M 45 55 L 115 55 L 185 55 L 255 55" fill="none" stroke="#ff4d8d" stroke-width="10" stroke-linecap="round" opacity="0.4" />
+    <path d="M 45 55 L 115 55 L 185 55 L 255 55" fill="none" stroke="#ff4d8d" stroke-width="6" stroke-linecap="round" />
+    <path d="M 45 55 L 115 55 L 185 55 L 255 55" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- 4 Bạn Giọt Sơn Đang Được Nối Liền Dải -->
+    <!-- Giọt 1 -->
+    <g transform="translate(45, 55)" filter="url(#tileShadow)">
+      <circle cx="0" cy="0" r="21" fill="#ff6ea7" />
+      <circle cx="-6" cy="-8" r="4" fill="#ffffff88" />
+      <circle cx="-6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <circle cx="6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <path d="M -3 3 Q 0 7 3 3" fill="none" stroke="#3a2a4d" stroke-width="1.8" stroke-linecap="round" />
     </g>
 
-    <!-- Giọt Xanh Trời (Blue) với Cọ Vẽ -->
-    <g transform="translate(108, 50)" filter="url(#tileShadow)">
-      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#5ab8ff" stroke="#00000018" stroke-width="2" />
-      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
-      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
-      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
-      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
-      <!-- Cọ vẽ icon -->
-      <text x="14" y="-12" font-size="16">🖌️</text>
+    <!-- Giọt 2 -->
+    <g transform="translate(115, 55)" filter="url(#tileShadow)">
+      <circle cx="0" cy="0" r="21" fill="#ff6ea7" />
+      <circle cx="-6" cy="-8" r="4" fill="#ffffff88" />
+      <circle cx="-6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <circle cx="6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <path d="M -3 3 Q 0 7 3 3" fill="none" stroke="#3a2a4d" stroke-width="1.8" stroke-linecap="round" />
     </g>
 
-    <!-- Giọt Vàng Chuối (Yellow) -->
-    <g transform="translate(174, 50)" filter="url(#tileShadow)">
-      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#ffd93d" stroke="#00000018" stroke-width="2" />
-      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
-      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
-      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
-      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+    <!-- Giọt 3 -->
+    <g transform="translate(185, 55)" filter="url(#tileShadow)">
+      <circle cx="0" cy="0" r="21" fill="#ff6ea7" />
+      <circle cx="-6" cy="-8" r="4" fill="#ffffff88" />
+      <circle cx="-6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <circle cx="6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <path d="M -3 3 Q 0 7 3 3" fill="none" stroke="#3a2a4d" stroke-width="1.8" stroke-linecap="round" />
     </g>
 
-    <!-- Giọt Xanh Bơ (Green) -->
-    <g transform="translate(238, 50)" filter="url(#tileShadow)">
-      <ellipse cx="0" cy="0" rx="24" ry="22" fill="#6bd68b" stroke="#00000018" stroke-width="2" />
-      <ellipse cx="-8" cy="-10" rx="6" ry="3.5" fill="#ffffff88" transform="rotate(-20 -8 -10)" />
-      <circle cx="-7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="-8" cy="-3" r="1" fill="#ffffff" />
-      <circle cx="7" cy="-2" r="3" fill="#3a2a4d" />
-      <circle cx="6" cy="-3" r="1" fill="#ffffff" />
-      <path d="M -4 4 Q 0 8 4 4" fill="none" stroke="#3a2a4d" stroke-width="2" stroke-linecap="round" />
+    <!-- Giọt 4 với hiệu ứng Super Nova Pulsing -->
+    <g transform="translate(255, 55)" filter="url(#glowEffect)">
+      <circle cx="0" cy="0" r="24" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="4,3" />
+      <circle cx="0" cy="0" r="21" fill="#ff6ea7" />
+      <circle cx="-6" cy="-8" r="4" fill="#ffffff88" />
+      <circle cx="-6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <circle cx="6" cy="-2" r="2.8" fill="#3a2a4d" />
+      <path d="M -3 3 Q 0 7 3 3" fill="none" stroke="#3a2a4d" stroke-width="1.8" stroke-linecap="round" />
+      <text x="10" y="-12" font-size="16">⚡</text>
     </g>
   </g>
 
-  <!-- Sparkles -->
-  <text x="80" y="60" font-size="18">✨</text>
-  <text x="310" y="80" font-size="22">✨</text>
-  <text x="40" y="140" font-size="20">🎨</text>
-  <text x="345" y="170" font-size="20">🪣</text>
+  <!-- Confetti & Sparkles -->
+  <rect x="50" y="40" width="8" height="6" rx="2" fill="#ffd026" transform="rotate(25 50 40)" />
+  <rect x="330" y="50" width="7" height="5" rx="2" fill="#42a5f5" transform="rotate(-35 330 50)" />
+  <rect x="340" y="130" width="8" height="6" rx="2" fill="#4ed17d" transform="rotate(40 340 130)" />
+  <text x="32" y="110" font-size="20">✨</text>
+  <text x="345" y="90" font-size="20">✨</text>
 </svg>
-

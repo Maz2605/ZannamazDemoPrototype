@@ -1,3 +1,2 @@
 @echo off
-start "" "%~dp0index.html"
-
+call python -m http.server 8001

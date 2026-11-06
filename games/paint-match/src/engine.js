@@ -1,7 +1,9 @@
 /**
- * Paint Match - Engine
- * Xử lý toàn bộ logic Match-3: phát hiện chuỗi nối, hoán đổi, nổ cọ/xô, trọng lực,
- * bắn sơn lên tranh pixel, mở khóa, loang mực và điều kiện thắng/thua.
+ * Paint Match - Engine (Color Alchemy & Conveyor Mechanics)
+ * Đột phá cơ chế:
+ * - Nghệ nhân Pha màu (Color Alchemy): Nối dải chuyển màu (Đỏ + Vàng = Cam; Xanh + Vàng = Xanh lá...)
+ * - Băng chuyền tự động dịch chuyển ô sau mỗi lượt (Moving Conveyor Belt)
+ * - Hệ thống tính điểm 1-3 Sao và Bộ sưu tập Bảo tàng Tranh (Gallery Museum)
  */
 
 (function (root, factory) {
@@ -16,31 +18,32 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (Constants, Levels) {
   'use strict';
 
-  const { BOARD_SIZE, PIX_SIZE, SPECIAL, BLOCKER } = Constants;
+  const { BOARD_SIZE, PIX_SIZE, BLOCKER, getMixResult } = Constants;
   const N = BOARD_SIZE;
   const PX = PIX_SIZE;
 
-  // LCG Pseudo-Random Number Generator cho tính tái lập (deterministic)
   function random(G) {
     G.rs = (G.rs * 1664525 + 1013904223) >>> 0;
     return G.rs / 4294967296;
   }
 
-  // Kiểm tra 2 ô trên bàn cờ có kề sát nhau không (không tính đường chéo)
+  /**
+   * KIỂM TRA KỀ CẠNH 4 HƯỚNG (CHỈ NGANG VÀ DỌC)
+   */
   function isAdjacent(a, b, size = N) {
-    if (a < 0 || b < 0 || a >= size * size || b >= size * size) return false;
-    const sameRow = Math.floor(a / size) === Math.floor(b / size);
-    const sameCol = (a % size) === (b % size);
-    return (sameRow && Math.abs(a - b) === 1) || (sameCol && Math.abs(a - b) === size);
+    if (a < 0 || b < 0 || a >= size * size || b >= size * size || a === b) return false;
+    const r1 = Math.floor(a / size), c1 = a % size;
+    const r2 = Math.floor(b / size), c2 = b % size;
+    const sameRow = r1 === r2;
+    const sameCol = c1 === c2;
+    return (sameRow && Math.abs(c1 - c2) === 1) || (sameCol && Math.abs(r1 - r2) === 1);
   }
 
-  // Tạo một ô kẹo/giọt sơn bình thường ngẫu nhiên
   function makeCell(G) {
     const cols = G.level.cols;
     const color = cols[Math.floor(random(G) * cols.length)];
     return {
       c: color,
-      sp: SPECIAL.NONE,
       st: BLOCKER.NONE,
       cg: 0,
       hd: 0,
@@ -48,20 +51,19 @@
     };
   }
 
-  // Kiểm tra ô có phải là giọt màu có thể ghép được hay không (không phải đá, xô sơn)
-  function isColorTile(cell) {
-    return !!cell && !cell.st && cell.sp !== SPECIAL.BUCKET;
+  function isConnectable(cell) {
+    return !!cell && !cell.st && !cell.cg;
   }
 
   /**
-   * Khởi tạo trạng thái bàn chơi mới cho level i
+   * Khởi tạo bàn chơi mới
    */
   function createGame(levelIndex, levelsSource = Levels) {
     const level = levelsSource.get(levelIndex);
     const G = {
       levelIndex,
       level,
-      rs: 900 + levelIndex * 37,
+      rs: 960 + levelIndex * 47,
       grid: [],
       pix: [],
       moves: level.m,
@@ -73,12 +75,13 @@
       left: 0,
       totalPixels: 0,
       msg: '',
-      reshuffled: false
+      reshuffled: false,
+      conveyors: level.conveyors || []
     };
 
     // 1. Tạo lưới tranh pixel (8x8)
-    level.a.forEach((row, r) => {
-      [...row].forEach((ch, c) => {
+    level.a.forEach(row => {
+      [...row].forEach(ch => {
         const isFilled = ch !== '.';
         const p = {
           c: isFilled ? ch : null,
@@ -95,36 +98,24 @@
       });
     });
 
-    // Thiết lập các ô bị khóa trên tranh
     (level.lock || []).forEach(([r, c]) => {
       const idx = r * PX + c;
       if (G.pix[idx] && G.pix[idx].c) G.pix[idx].lock = 1;
     });
 
-    // Thiết lập các ô sơn 2 lớp trên tranh
     (level.dbl || []).forEach(([r, c]) => {
       const idx = r * PX + c;
       if (G.pix[idx] && G.pix[idx].c) G.pix[idx].hp = 2;
     });
 
-    // 2. Tạo bàn cờ Match-3 (6x6) không tạo chuỗi 3 sẵn
+    // 2. Tạo bàn cờ (6x6)
     for (let k = 0; k < N * N; k++) {
-      let cell, attempts = 0;
-      do {
-        cell = makeCell(G);
-        attempts++;
-      } while (
-        attempts < 30 &&
-        ((k % N >= 2 && G.grid[k - 1].c === cell.c && G.grid[k - 2].c === cell.c) ||
-         (k >= 2 * N && G.grid[k - N].c === cell.c && G.grid[k - 2 * N].c === cell.c))
-      );
-      G.grid.push(cell);
+      G.grid.push(makeCell(G));
     }
 
-    // Thiết lập chướng ngại vật trên bàn cờ
     (level.stones || []).forEach(k => {
       if (k >= 0 && k < N * N) {
-        G.grid[k] = { c: '#', sp: SPECIAL.NONE, st: BLOCKER.STONE, cg: 0, hd: 0 };
+        G.grid[k] = { c: '#', st: BLOCKER.STONE, cg: 0, hd: 0 };
       }
     });
 
@@ -136,64 +127,98 @@
 
     for (let h = 0; h < (level.hid || 0); h++) {
       const k = Math.floor(random(G) * N * N);
-      if (isColorTile(G.grid[k])) {
+      if (isConnectable(G.grid[k])) {
         G.grid[k].hd = 1;
       }
     }
 
-    // Đảm bảo bàn cờ luôn có ít nhất một nước đi hợp lệ
     fixMoves(G);
-
     return G;
   }
 
   /**
-   * Tìm tất cả các chuỗi ghép >= 3 cùng màu theo hàng ngang và hàng dọc
+   * Thống kê danh sách mục tiêu màu sắc còn thiếu trên tranh
    */
-  function findRuns(grid, size = N) {
-    const runs = [];
+  function getGoals(G) {
+    const map = {};
+    G.pix.forEach(p => {
+      if (!p.c) return;
+      if (!map[p.c]) {
+        map[p.c] = { color: p.c, needed: 0, total: 0 };
+      }
+      map[p.c].total++;
+      if (!p.done) {
+        map[p.c].needed++;
+      }
+    });
+    return Object.values(map);
+  }
 
-    // Tìm theo từng hàng ngang
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size;) {
-        const first = grid[r * size + c];
-        let end = c + 1;
-        if (isColorTile(first)) {
-          while (end < size && isColorTile(grid[r * size + end]) && grid[r * size + end].c === first.c) {
-            end++;
-          }
+  /**
+   * Phân tích đường nối: Kiểm tra xem là nối thuần màu hay nối Pha Màu (Color Alchemy)
+   * Trả về: { isValid: boolean, isMixed: boolean, outputColor: string, colorsInvolved: string[] }
+   */
+  function analyzePath(G, path) {
+    if (!path || path.length < 3) {
+      return { isValid: false, isMixed: false, outputColor: null, colorsInvolved: [] };
+    }
+
+    const firstCell = G.grid[path[0]];
+    if (!firstCell || !isConnectable(firstCell)) {
+      return { isValid: false, isMixed: false, outputColor: null, colorsInvolved: [] };
+    }
+
+    const colorsInvolved = [];
+    let currentColor = firstCell.c;
+    colorsInvolved.push(currentColor);
+
+    for (let i = 1; i < path.length; i++) {
+      const cell = G.grid[path[i]];
+      if (!cell || !isConnectable(cell)) {
+        return { isValid: false, isMixed: false, outputColor: null, colorsInvolved: [] };
+      }
+      if (cell.c !== currentColor) {
+        if (!colorsInvolved.includes(cell.c)) {
+          colorsInvolved.push(cell.c);
         }
-        if (end - c >= 3) {
-          runs.push(Array.from({ length: end - c }, (_, k) => r * size + c + k));
-        }
-        c = end;
+        currentColor = cell.c;
       }
     }
 
-    // Tìm theo từng cột dọc
-    for (let c = 0; c < size; c++) {
-      for (let r = 0; r < size;) {
-        const first = grid[r * size + c];
-        let end = r + 1;
-        if (isColorTile(first)) {
-          while (end < size && isColorTile(grid[end * size + c]) && grid[end * size + c].c === first.c) {
-            end++;
-          }
-        }
-        if (end - r >= 3) {
-          runs.push(Array.from({ length: end - r }, (_, k) => (r + k) * size + c));
-        }
-        r = end;
+    // 1. Nếu tất cả ô cùng 1 màu: Nối thuần túy
+    if (colorsInvolved.length === 1) {
+      return {
+        isValid: true,
+        isMixed: false,
+        outputColor: colorsInvolved[0],
+        colorsInvolved
+      };
+    }
+
+    // 2. Nếu có 2 màu: Kiểm tra công thức pha màu
+    if (colorsInvolved.length === 2) {
+      const mixed = getMixResult(colorsInvolved[0], colorsInvolved[1]);
+      if (mixed) {
+        return {
+          isValid: true,
+          isMixed: true,
+          outputColor: mixed,
+          colorsInvolved
+        };
       }
     }
 
-    return runs;
+    // Không thể pha quá 2 màu hoặc không có công thức hợp lệ
+    return { isValid: false, isMixed: false, outputColor: null, colorsInvolved };
   }
 
   /**
    * Bắn giọt sơn lên bức tranh pixel
    */
-  function paintPixels(G, color, units, fromIndex) {
+  function paintPixels(G, color, units, fromIndices, isMixed = false) {
+    const fromList = Array.isArray(fromIndices) ? fromIndices : [fromIndices];
+    let fromCursor = 0;
+
     for (let u = 0; u < units; u++) {
       let best = -1;
       let minDistance = Infinity;
@@ -208,7 +233,7 @@
             const iy = Math.floor(i / PX);
             dist = Math.hypot(ix - fx, iy - fy);
           } else {
-            dist = i; // Ưu tiên từ trên xuống dưới
+            dist = i;
           }
 
           if (dist < minDistance) {
@@ -218,24 +243,27 @@
         }
       });
 
-      if (best < 0) return; // Không còn ô nào màu này có thể tô
+      if (best < 0) return;
 
       const targetPixel = G.pix[best];
       targetPixel.hp--;
       targetPixel.pop = 1;
 
+      const sourceIndex = fromList[fromCursor % fromList.length];
+      fromCursor++;
+
       G.fx.push({
         k: 'fly',
-        i: fromIndex,
+        i: sourceIndex,
         p: best,
-        c: color
+        c: color,
+        isMixed
       });
 
       if (targetPixel.hp <= 0) {
         targetPixel.done = 1;
         G.left--;
 
-        // Khi tô xong 1 ô, tự động mở khóa 4 ô liền kề trong tranh
         const r = Math.floor(best / PX);
         const c = best % PX;
         const neighbors = [
@@ -258,80 +286,7 @@
   }
 
   /**
-   * Xóa các ô ghép, tính sát thương xung quanh (đá, lồng, ô ẩn), bắn màu và sinh ô kỹ năng
-   */
-  function clearCells(G, clearSet, spawnList, chain) {
-    const countsByColor = {};
-
-    clearSet.forEach(i => {
-      const cell = G.grid[i];
-      if (cell && !cell.st && cell.c !== '*') {
-        countsByColor[cell.c] = (countsByColor[cell.c] || 0) + 1;
-      }
-    });
-
-    // Kiểm tra sát thương xung quanh các ô bị nổ (phá đá, lồng, mở ô ẩn)
-    const damagedSet = new Set();
-    clearSet.forEach(i => {
-      const neighbors = [
-        i - N,
-        i + N,
-        i % N > 0 ? i - 1 : -1,
-        i % N < N - 1 ? i + 1 : -1
-      ];
-
-      neighbors.forEach(j => {
-        if (j >= 0 && j < N * N && !clearSet.has(j) && G.grid[j]) {
-          const neighborCell = G.grid[j];
-          if (neighborCell.st) {
-            damagedSet.add(j);
-          } else {
-            neighborCell.cg = 0;
-            neighborCell.hd = 0;
-          }
-        }
-      });
-    });
-
-    // Tìm màu có số lượng nổ nhiều nhất để thưởng thêm hạt màu theo combo chain
-    const colors = Object.keys(countsByColor);
-    const primaryColor = colors.sort((a, b) => countsByColor[b] - countsByColor[a])[0];
-
-    colors.forEach(color => {
-      const bonus = (color === primaryColor) ? Math.max(0, chain - 1) : 0;
-      const totalUnits = countsByColor[color] + bonus;
-      const sourceIndex = [...clearSet].find(i => G.grid[i] && G.grid[i].c === color);
-      paintPixels(G, color, totalUnits, sourceIndex);
-    });
-
-    // Gửi hiệu ứng vỡ nổ (pop fx)
-    [...clearSet, ...damagedSet].forEach(i => {
-      if (G.grid[i]) {
-        G.fx.push({
-          k: 'pop',
-          i,
-          c: G.grid[i].c,
-          st: G.grid[i].st
-        });
-      }
-      G.grid[i] = null;
-    });
-
-    // Tạo các ô đặc biệt mới sinh ra (cọ hoặc xô)
-    spawnList.forEach(item => {
-      G.grid[item.at] = {
-        c: item.c,
-        sp: item.sp,
-        st: BLOCKER.NONE,
-        cg: 0,
-        hd: 0,
-        fresh: 0
-      };
-    });
-  }
-
-  /**
-   * Áp dụng trọng lực: rớt các ô từ trên xuống và sinh các ô mới ở đỉnh
+   * Trọng lực rơi kẹo từ trên xuống
    */
   function applyGravity(G) {
     for (let c = 0; c < N; c++) {
@@ -354,98 +309,108 @@
   }
 
   /**
-   * Giải quyết liên hoàn các combo nối (cascades)
+   * KÍCH HOẠT BĂNG CHUYỀN ĐỘNG (CONVEYOR BELTS)
+   * Sau mỗi lượt đi, các hàng hoặc cột có băng chuyền sẽ trượt 1 bước
    */
-  function resolveBoard(G, preferredCenter = -1, chain = 0) {
-    let currentPref = preferredCenter;
+  function applyConveyors(G) {
+    if (!G.conveyors || !G.conveyors.length) return;
 
-    for (;;) {
-      const runs = findRuns(G.grid, N);
-      if (!runs.length) break;
+    G.conveyors.forEach(cv => {
+      // 1. Băng chuyền theo hàng (Row conveyor)
+      if (cv.row !== undefined && cv.row >= 0 && cv.row < N) {
+        const r = cv.row;
+        const dir = cv.dir >= 0 ? 1 : -1; // 1 = sang phải, -1 = sang trái
+        const oldRow = [];
+        for (let c = 0; c < N; c++) {
+          oldRow.push(G.grid[r * N + c]);
+        }
+        for (let c = 0; c < N; c++) {
+          const fromCol = (c - dir + N) % N;
+          G.grid[r * N + c] = oldRow[fromCol];
+        }
+        G.fx.push({ k: 'conveyor_row', row: r, dir });
+      }
 
-      chain++;
-      const clearSet = new Set();
-      const spawnList = [];
+      // 2. Băng chuyền theo cột (Column conveyor)
+      if (cv.col !== undefined && cv.col >= 0 && cv.col < N) {
+        const c = cv.col;
+        const dir = cv.dir >= 0 ? 1 : -1; // 1 = xuống dưới, -1 = lên trên
+        const oldCol = [];
+        for (let r = 0; r < N; r++) {
+          oldCol.push(G.grid[r * N + c]);
+        }
+        for (let r = 0; r < N; r++) {
+          const fromRow = (r - dir + N) % N;
+          G.grid[r * N + c] = oldCol[fromRow];
+        }
+        G.fx.push({ k: 'conveyor_col', col: c, dir });
+      }
+    });
+  }
 
-      runs.forEach(run => {
-        run.forEach(idx => clearSet.add(idx));
-      });
+  /**
+   * Kiểm tra xem trên bàn cờ có ít nhất một chuỗi nối hợp lệ (cùng màu hoặc pha màu) không
+   */
+  function hasMove(G) {
+    // 1. Kiểm tra dải 3 ô cùng màu kề nhau theo 4 hướng
+    for (let i = 0; i < N * N; i++) {
+      const cellA = G.grid[i];
+      if (!isConnectable(cellA)) continue;
 
-      // Nếu trong các ô vỡ có ô Cọ vẽ (Brush 'b'), quét nổ toàn bộ hàng đó
-      [...clearSet].forEach(idx => {
-        if (G.grid[idx] && G.grid[idx].sp === SPECIAL.BRUSH) {
-          const row = Math.floor(idx / N);
-          for (let c = 0; c < N; c++) {
-            const targetIndex = row * N + c;
-            if (G.grid[targetIndex] && !G.grid[targetIndex].st) {
-              clearSet.add(targetIndex);
+      const r = Math.floor(i / N), c = i % N;
+      const deltas = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+      for (const [dr1, dc1] of deltas) {
+        const nr1 = r + dr1, nc1 = c + dc1;
+        if (nr1 >= 0 && nr1 < N && nc1 >= 0 && nc1 < N) {
+          const j = nr1 * N + nc1;
+          const cellB = G.grid[j];
+          if (isConnectable(cellB) && cellB.c === cellA.c) {
+            // Kiểm tra tiếp ô thứ 3
+            for (const [dr2, dc2] of deltas) {
+              const nr2 = nr1 + dr2, nc2 = nc1 + dc2;
+              if (nr2 >= 0 && nr2 < N && nc2 >= 0 && nc2 < N) {
+                const k = nr2 * N + nc2;
+                if (k !== i) {
+                  const cellC = G.grid[k];
+                  if (isConnectable(cellC) && cellC.c === cellA.c) return true;
+                }
+              }
             }
           }
         }
-      });
-
-      // Tạo ô Cọ vẽ (ghép 4) hoặc Xô sơn (ghép 5+)
-      runs.forEach(run => {
-        if (run.length >= 4) {
-          const centerIndex = run.includes(currentPref) ? currentPref : run[Math.floor(run.length / 2)];
-          if (G.grid[centerIndex] && !G.grid[centerIndex].sp) {
-            const isFiveMatch = run.length >= 5;
-            spawnList.push({
-              at: centerIndex,
-              sp: isFiveMatch ? SPECIAL.BUCKET : SPECIAL.BRUSH,
-              c: isFiveMatch ? '*' : G.grid[centerIndex].c
-            });
-            clearSet.delete(centerIndex);
-          }
-        }
-      });
-
-      clearCells(G, clearSet, spawnList, chain);
-      applyGravity(G);
-      currentPref = -1;
-    }
-
-    return chain;
-  }
-
-  /**
-   * Kiểm tra xem trên bàn cờ còn bất kỳ nước đi hợp lệ nào không
-   */
-  function hasMove(G) {
-    for (let i = 0; i < N * N; i++) {
-      const neighbors = [i + 1, i + N];
-      for (const j of neighbors) {
-        if (j >= N * N || !isAdjacent(i, j, N)) continue;
-
-        const a = G.grid[i];
-        const b = G.grid[j];
-        if (!a || !b || a.st || b.st || a.cg || b.cg) continue;
-
-        // Nếu một trong 2 ô là Xô sơn, luôn có thể hoán đổi
-        if (a.sp === SPECIAL.BUCKET || b.sp === SPECIAL.BUCKET) return true;
-
-        // Thử hoán đổi ảo
-        G.grid[i] = b;
-        G.grid[j] = a;
-        const valid = findRuns(G.grid, N).length > 0;
-        G.grid[i] = a;
-        G.grid[j] = b;
-
-        if (valid) return true;
       }
     }
+
+    // 2. Kiểm tra chuỗi pha màu hợp lệ (ví dụ: A - A - B hoặc A - B - B)
+    for (let i = 0; i < N * N; i++) {
+      const cellA = G.grid[i];
+      if (!isConnectable(cellA)) continue;
+
+      const r = Math.floor(i / N), c = i % N;
+      const deltas = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+      for (const [dr, dc] of deltas) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+          const j = nr * N + nc;
+          const cellB = G.grid[j];
+          if (isConnectable(cellB) && getMixResult(cellA.c, cellB.c)) {
+            return true; // Có cơ hội pha màu
+          }
+        }
+      }
+    }
+
     return false;
   }
 
-  /**
-   * Tự động xáo lại các ô kẹo nếu bàn cờ bị kẹt không còn nước đi
-   */
   function fixMoves(G) {
     let attempts = 0;
-    while (attempts < 60 && (!hasMove(G) || findRuns(G.grid, N).length > 0)) {
+    while (attempts < 60 && !hasMove(G)) {
       attempts++;
       const availableIndices = G.grid
-        .map((cell, idx) => (isColorTile(cell) && !cell.cg ? idx : -1))
+        .map((cell, idx) => (isConnectable(cell) ? idx : -1))
         .filter(idx => idx >= 0);
 
       availableIndices.forEach(idx => {
@@ -456,23 +421,35 @@
   }
 
   /**
-   * Cập nhật trạng thái sau mỗi lượt đi (trừ lượt, mực loang, kiểm tra thắng/thua)
+   * Tính số sao đạt được khi chiến thắng (1 đến 3 sao)
+   */
+  function calculateStars(G) {
+    const ratio = G.moves / G.initialMoves;
+    if (ratio >= 0.4) return 3; // Dư từ 40% số lượt trở lên -> 3 sao ⭐⭐⭐
+    if (ratio >= 0.15) return 2; // Dư từ 15% số lượt trở lên -> 2 sao ⭐⭐
+    return 1; // 1 sao ⭐
+  }
+
+  /**
+   * Cập nhật sau lượt đi (trừ lượt, mực loang, trượt băng chuyền)
    */
   function afterTurn(G) {
     G.moves--;
     G.mv++;
 
-    // Loang mực đen quái vật nếu màn có cấu hình ink
+    // 1. Dịch chuyển băng chuyền
+    applyConveyors(G);
+
+    // 2. Loang mực
     if (G.level.ink && G.mv % G.level.ink === 0 && G.left > 0) {
       const candidateIndices = G.grid
-        .map((cell, idx) => (isColorTile(cell) && !cell.sp ? idx : -1))
+        .map((cell, idx) => (isConnectable(cell) ? idx : -1))
         .filter(idx => idx >= 0);
 
       if (candidateIndices.length > 0) {
         const spreadIndex = candidateIndices[Math.floor(random(G) * candidateIndices.length)];
         G.grid[spreadIndex] = {
           c: '#',
-          sp: SPECIAL.NONE,
           st: BLOCKER.INK,
           cg: 0,
           hd: 0
@@ -484,6 +461,7 @@
 
     if (G.left <= 0) {
       G.state = 'won';
+      G.stars = calculateStars(G);
     } else if (G.moves <= 0) {
       G.state = 'lost';
     }
@@ -492,65 +470,95 @@
   }
 
   /**
-   * Thực hiện hoán đổi 2 ô a và b
+   * Thực hiện kết nối một đường vẽ (Line Connect)
+   * Hỗ trợ cả Nối Thuần Màu và Nối Pha Màu (Color Alchemy)
    */
-  function swap(G, a, b) {
-    if (!isAdjacent(a, b, N)) return false;
+  function executeConnect(G, path, isLoop = false) {
+    const analysis = analyzePath(G, path);
+    if (!analysis.isValid) return false;
 
-    const cellA = G.grid[a];
-    const cellB = G.grid[b];
+    const { outputColor, isMixed } = analysis;
+    let clearedSet = new Set();
 
-    // Không thể hoán đổi ô đá hoặc ô đang bị lồng nhốt
-    if (!cellA || !cellB || cellA.st || cellB.st || cellA.cg || cellB.cg) {
-      return false;
-    }
+    // Kiểm tra xem màu kết quả có còn thiếu trên tranh không
+    const neededOnCanvas = G.pix.filter(p => p.c === outputColor && !p.done).length;
+    const isWasteColor = neededOnCanvas === 0;
 
-    // Xử lý Xô sơn thần kỳ (Match 5)
-    if (cellA.sp === SPECIAL.BUCKET || cellB.sp === SPECIAL.BUCKET) {
-      const isABucket = cellA.sp === SPECIAL.BUCKET;
-      const isBBucket = cellB.sp === SPECIAL.BUCKET;
-
-      let targetColor = null;
-      if (isABucket && isBBucket) {
-        targetColor = null; // Cả hai xô chạm nhau: xóa sạch toàn bàn!
-      } else {
-        targetColor = isABucket ? cellB.c : cellA.c;
-      }
-
-      const clearSet = new Set([a, b]);
-      G.grid.forEach((cell, idx) => {
-        if (cell && !cell.st && (targetColor === null || cell.c === targetColor)) {
-          clearSet.add(idx);
-        }
+    // 1. Xử lý Super Nova nếu tạo thành Loop khép kín
+    if (isLoop) {
+      analysis.colorsInvolved.forEach(col => {
+        G.grid.forEach((cell, idx) => {
+          if (cell && isConnectable(cell) && cell.c === col) {
+            clearedSet.add(idx);
+          }
+        });
       });
-
-      clearCells(G, clearSet, [], 1);
-      applyGravity(G);
-      resolveBoard(G, -1, 1);
-      afterTurn(G);
-      return true;
+      G.fx.push({ k: 'super_nova', c: outputColor, isMixed, waste: isWasteColor });
+    } else {
+      path.forEach(idx => clearedSet.add(idx));
+      if (isWasteColor) {
+        G.fx.push({ k: 'waste', c: outputColor });
+      }
     }
 
-    // Hoán đổi thông thường
-    G.grid[a] = cellB;
-    G.grid[b] = cellA;
+    // 2. Gây sát thương các ô blocker lân cận (4 hướng)
+    const damagedSet = new Set();
+    clearedSet.forEach(idx => {
+      const r = Math.floor(idx / N), c = idx % N;
+      const deltas = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-    // Nếu không tạo được chuỗi >= 3, hoàn tác lại vị trí
-    if (!findRuns(G.grid, N).length) {
-      G.grid[a] = cellA;
-      G.grid[b] = cellB;
-      return false;
+      for (const [dr, dc] of deltas) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+          const j = nr * N + nc;
+          if (!clearedSet.has(j) && G.grid[j]) {
+            const neighbor = G.grid[j];
+            if (neighbor.st) {
+              damagedSet.add(j);
+            } else {
+              neighbor.cg = 0;
+              neighbor.hd = 0;
+            }
+          }
+        }
+      }
+    });
+
+    // 3. Bắn sơn lên tranh pixel nếu màu này còn thiếu
+    if (!isWasteColor) {
+      const baseCount = clearedSet.size;
+      const lengthBonus = Math.max(0, path.length - 3);
+      const loopBonus = isLoop ? 4 : 0;
+      const mixBonus = isMixed ? 2 : 0; // Thưởng thêm giọt sơn khi pha màu thành công!
+      const totalUnits = baseCount + lengthBonus + loopBonus + mixBonus;
+      paintPixels(G, outputColor, totalUnits, Array.from(clearedSet), isMixed);
     }
 
-    // Kích hoạt chuỗi combo nổ
-    resolveBoard(G, b, 0);
+    // 4. Hiệu ứng nổ ô
+    [...clearedSet, ...damagedSet].forEach(idx => {
+      if (G.grid[idx]) {
+        G.fx.push({
+          k: 'pop',
+          i: idx,
+          c: G.grid[idx].c,
+          st: G.grid[idx].st
+        });
+      }
+      G.grid[idx] = null;
+    });
+
+    applyGravity(G);
     afterTurn(G);
-    return true;
+
+    return {
+      success: true,
+      isWasteColor,
+      isMixed,
+      outputColor,
+      clearedCount: clearedSet.size
+    };
   }
 
-  /**
-   * Đặt ô trọng tâm ưu tiên sơn trên tranh pixel
-   */
   function setFocus(G, pixelIndex) {
     if (pixelIndex >= 0 && pixelIndex < G.pix.length) {
       const p = G.pix[pixelIndex];
@@ -565,13 +573,15 @@
 
   return {
     createGame,
-    swap,
-    findRuns,
+    isAdjacent,
+    isConnectable,
+    analyzePath,
+    executeConnect,
     hasMove,
     fixMoves,
     setFocus,
-    isAdjacent,
-    resolveBoard
+    getGoals,
+    calculateStars,
+    paintPixels
   };
 });
-

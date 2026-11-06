@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Paint Match - Trò chơi ghép 3 giọt sơn đầy sắc màu để vẽ tranh pixel art nghệ thuật.">
+  <meta name="description" content="Paint Match - Trò chơi nối màu một nét và pha màu nghệ thuật (Color Alchemy) để vẽ tranh pixel art khổng lồ.">
   <title>Paint Match - Tiệm Tranh Sắc Màu</title>
   <link rel="stylesheet" href="./src/styles.css">
   <script defer src="./src/constants.js"></script>
@@ -15,7 +15,7 @@
 </head>
 <body>
   <div id="app">
-    <!-- Header Điều khiển màn & âm thanh -->
+    <!-- Header Điều khiển màn, bảo tàng & âm thanh -->
     <header class="header-row">
       <div class="title-group">
         <h1><span class="palette-icon">🎨</span> Paint Match</h1>
@@ -26,6 +26,7 @@
           Màn <span id="lvl">1/10</span> <span class="arrow-down">▾</span>
         </button>
         <button id="next" class="icon-btn" aria-label="Màn sau" title="Màn sau">›</button>
+        <button id="gallery-btn" class="icon-btn" aria-label="Bảo tàng tranh" title="Bộ sưu tập Bảo tàng">🏛️</button>
         <button id="sound-btn" class="icon-btn" aria-label="Bật/Tắt âm thanh" title="Âm thanh">🔊</button>
       </nav>
     </header>
@@ -33,7 +34,7 @@
     <!-- Thẻ tiến độ và gợi ý màn chơi -->
     <section class="card" aria-label="Thông tin màn chơi">
       <div class="status-row">
-        <div class="mv" id="mv" aria-label="Số lượt đi còn lại">👆 20</div>
+        <div class="mv" id="mv" aria-label="Số lượt đi còn lại">👆 18</div>
         <div class="bar" role="progressbar" aria-label="Tiến độ vẽ tranh" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <i id="pf"></i>
         </div>
@@ -44,8 +45,8 @@
     <!-- Dòng thông báo nổi -->
     <div class="msg" id="msg" role="status" aria-live="polite"></div>
 
-    <!-- Khung vẽ Canvas Match-3 và Tranh Pixel -->
-    <canvas id="cv" width="680" height="1080" aria-label="Bàn chơi Match-3 và khung tranh vẽ"></canvas>
+    <!-- Khung vẽ Canvas Tranh Pixel Khổng Lồ & Line Connect 4 Hướng (360 x 640 -> 720 x 1280 Retina) -->
+    <canvas id="cv" width="720" height="1280" aria-label="Bàn chơi nối giọt sơn và giá vẽ tranh nghệ thuật"></canvas>
 
     <!-- Hàng nút chân trang -->
     <footer class="bottom-row">
@@ -77,6 +78,19 @@
       <div class="level-grid" id="lvl-grid"></div>
     </div>
   </div>
+
+  <!-- Modal Bảo tàng Tranh (Gallery Museum Modal) -->
+  <div id="gallery-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title">
+    <div class="modal-box gallery-modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 id="gallery-modal-title">🏛️ Bảo tàng Tranh</h3>
+          <span id="total-stars" class="total-stars-badge">⭐ 0 / 30</span>
+        </div>
+        <button id="close-gallery" class="close-btn" type="button" aria-label="Đóng bảo tàng">✕</button>
+      </div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+    </div>
+  </div>
 </body>
 </html>
-
